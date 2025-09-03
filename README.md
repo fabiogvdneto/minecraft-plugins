@@ -3,16 +3,14 @@
 A collection of simple, useful, and well-designed minecraft paper plugins,
 developed to work in the latest versions of minecraft.
 
----
-
 ## Plugins
 
 Each plugin lives in its own subfolder.
 
-* **CursedWarps** [download] \
+* **CursedWarps** [[more]](https://github.com/fabiogvdneto/minecraft-plugins/tree/main/warps) \
   This plugin is more than a simple warp plugin. It also gives your players the ability to
   create their own "homes" and send teleportation requests to other players (tpa).
-* **CursedKits** [download] \
+* **CursedKits** [[more]](https://github.com/fabiogvdneto/minecraft-plugins/tree/main/kits) \
   A kit plugin, as simple as it should be. Create kits for your players with ease without 
   having to touch configuration files or GUIs. It supports every item you can imagine,
   without loosing specificity. From enchantments to NBT tags, everything is supported.
