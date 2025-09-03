@@ -1,0 +1,59 @@
+command:
+  permission-required: "<red>Permission required."
+  players-only: "<red>Only players can execute this command."
+  player-not-found: "<red>Player <white><player><red> not found."
+  usage:
+    setwarp: "<red>Usage: setwarp <warp>."
+    delwarp: "<red>Usage: delwarp <warp>."
+    sethome: "<red>Usage: sethome <home>."
+    delhome: "<red>Usage: delhome <home>."
+    tpa: "<red>Usage: tpa <player>."
+teleporter:
+  movement-not-allowed: "<red>Movement is not allowed during teleportation."
+  damage-not-allowed: "<red>Fighting is not allowed during teleportation."
+  cancelled: "<red>Teleportation cancelled."
+  success: "<green>Teleportation completed."
+  countdown: "<yellow>Teleporting in <white><seconds><yellow>..."
+  player-not-found: "<red>You are not teleporting."
+  cannot-go-back: "<red>Unable to go back."
+tpask:
+  sent: "<green>Teleportation request sent to <receiver>."
+  received: >
+    
+    <yellow>You received a teleportation request from <sender>.
+    
+    <yellow>Click here to
+    <hover:show_text:"<white><b>Click here to accept."><click:run_command:"/tpaccept <sender>"><green><b>accept<reset>
+    <yellow>or
+    <hover:show_text:"<white><b>Click here to deny."><click:run_command:"/tpdeny <sender>"><red><b>deny<reset><yellow>.
+
+  expired: "<red>The teleportation request from <white><sender><red> expired."
+  denied: "<red>You denied the teleportation request from <white><sender><red>."
+  accepted: "<green>You accepted the teleportation request from <white><sender><green>."
+  not-found: "<red>Teleportation request not found."
+  pending: "<red>You already have a pending request to that player."
+  cooldown: "<red>Please wait before sending another request to that player."
+  ignored: "<red>You can't send a teleportation request to that player."
+  yourself: "<red>You can't send a teleportation request to yourself."
+warp:
+  set: "<green>Warp set."
+  deleted: "<green>Warp deleted."
+  already-exists: "<red>Warp name already in use."
+  not-found: "<red>Warp not found."
+  list:
+    empty: "<red>No warps available."
+    base: "<yellow>Warps available: <white><list>."
+    separator: "<gray>, <white>"
+home:
+  set: "<green>Home set."
+  deleted: "<green>Home deleted."
+  already-exists: "<red>Home name already in use."
+  not-found: "<red>Home not found."
+  limit-reached: "<red>Home limit reached: <count>/<limit>."
+  closed: "<red>That home is closed."
+  list:
+    empty: "<red>No homes found."
+    base: "<yellow>Homes: <white><list>."
+    separator: "<gray>, <white>"
+spawn:
+  undefined: "<red>There is no spawn yet."

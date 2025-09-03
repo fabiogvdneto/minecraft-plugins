@@ -1,0 +1,8 @@
+name: "CursedKits"
+main: "com.github.fabiogvdneto.kits.KitsPlugin"
+version: "0.1"
+commands:
+  createkit: {}
+  deletekit: {}
+  kits: {}
+  kit: {}

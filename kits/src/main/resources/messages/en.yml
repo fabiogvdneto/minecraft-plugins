@@ -1,0 +1,20 @@
+permission-required: "<red>You don't have permission to do that."
+command:
+  players-only: "<red>Only players are allowed to execute this command."
+  usage:
+    kit: "<yellow>Usage: <white>/kit <name>"
+    createkit: "<yellow>Usage: <white>/createkit <name>"
+    deletekit: "<yellow>Usage: <white>/deletekit <name>"
+kit:
+  redeemed: "<green>Kit <white><name><green> was redeemed."
+  created: "<green>Kit <white><name><green> was created."
+  deleted: "<green>Kit <white><name><green> was deleted."
+  inventory-full: "<red>You don't have enough space in your inventory to collect the kit."
+  not-found: "<red>Kit <white><name><red> not found."
+  already-exists: "<red>Kit <white><name><red> already exists."
+  cooldown: "<red>You have to wait <white><cooldown><red> minutes before redeeming this kit again."
+  insufficient-money: "<red>You need <white><cost><red> to buy this kit."
+  list:
+    empty: '<red>There are no kits available.'
+    base: '<yellow>Kits: <white><list>.'
+    separator: '<gray>, <white>'

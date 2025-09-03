@@ -1,0 +1,40 @@
+# Options available: 'en' | 'pt'.
+lang: 'en'
+teleporter:
+  # Maximum delay a teleportation may take, in seconds.
+  # This value works together with the permission 'warps.teleporter.delay.<0::max-delay>'.
+  max-delay-seconds: 5
+  # If false, ongoing teleportations will be cancelled if movement is detected.
+  movement-allowed: false
+  # If false, ongoing teleportations will be cancelled if damage is detected.
+  damage-allowed: false
+  # Choose which commands are allowed during teleportation.
+  # Options available: 'true' | 'false' | 'whitelist' | 'blacklist'.
+  # Default is whitelist.
+  commands-allowed: 'whitelist'
+  command-list: [ 'a', 'f', 'g', '.', 'tell', 'tpcancel' ]
+warps:
+  # Autosave in minutes.
+  # Options: <integer>.
+  autosave-minutes: 30
+homes:
+  # Maximum number of homes a player may own.
+  # This value works together with the permission 'warps.homes.limit.<0::max-limit>'.
+  # Options: <integer>.
+  max-limit: 5
+users:
+  # How many days a player may be offline before their data is wiped out.
+  # Options: <integer>
+  purge-days: 90
+  # Autosave in minutes.
+  # Options: <integer>.
+  autosave-minutes: 15
+tpask:
+  # Duration in seconds until a teleportation request expires.
+  # Options: <integer>.
+  duration-seconds: 75
+  # Minimum delay a teleportation may take, in seconds.
+  # This allows every player to cancel the teleportation if they don't want
+  # to teleport at the moment the request was accepted.
+  # Options: <integer>
+  min-delay-seconds: 3

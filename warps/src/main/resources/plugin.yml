@@ -1,0 +1,46 @@
+name: CursedWarps
+version: '0.1'
+main: com.github.fabiogvdneto.warps.WarpsPlugin
+api-version: '1.21'
+commands:
+  spawn: {}
+  warp: {}
+  warps: {}
+  setwarp: {}
+  delwarp: {}
+  home: {}
+  homes: {}
+  sethome: {}
+  delhome: {}
+  tpa: {}
+  tphere: {}
+  tpaccept: {}
+  tpdeny: {}
+  tpcancel: {}
+permissions:
+  warps.admin:
+    description: "Grants advanced permissions for admins."
+    default: op
+    children:
+      warps.teleporter.delay.0: true
+      warps.homes.limit.max: true
+      warps.command.setwarp: true
+      warps.command.delwarp: true
+      warps.command.tphere: true
+      warps.command.back: true
+  warps.basics:
+    description: "Grants basic permissions for everyone."
+    default: not op
+    children:
+      warps.command.spawn: true
+      warps.command.warps: true
+      warps.command.homes: true
+      warps.command.warp: true
+      warps.command.home: true
+      warps.command.delhome: true
+      warps.command.sethome: true
+      warps.command.tpa: true
+      warps.command.tpaccept: true
+      warps.command.tpdeny: true
+      warps.command.tpcancel: true
+      warps.homes.limit.max: true
