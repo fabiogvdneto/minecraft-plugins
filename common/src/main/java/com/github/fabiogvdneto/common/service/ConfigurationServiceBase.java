@@ -16,7 +16,7 @@ public abstract class ConfigurationServiceBase implements PluginService {
     public void enable() {
         // Reload config from disk.
         plugin.reloadConfig();
-        // Save raw configuration (preserve all comments)
+        // Save raw configuration (preserve all comments).
         // Not needed in future versions of spigot/paper (1.18+).
         plugin.saveDefaultConfig();
     }

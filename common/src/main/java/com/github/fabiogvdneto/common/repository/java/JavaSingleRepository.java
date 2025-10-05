@@ -23,6 +23,11 @@ public class JavaSingleRepository<V> implements SingleRepository<V> {
     }
 
     @Override
+    public void delete() throws IOException {
+        Files.deleteIfExists(file);
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public V fetch() throws IOException {
         if (Files.isRegularFile(file)) {
@@ -43,15 +48,7 @@ public class JavaSingleRepository<V> implements SingleRepository<V> {
     }
 
     @Override
-    public void delete() throws IOException {
-        Files.deleteIfExists(file);
-    }
-
-    @Override
     public String toString() {
-        return """
-                type:java-object-serialization
-                location:%s
-                """.formatted(file);
+        return "type:java-object-serialization path:%s".formatted(file);
     }
 }

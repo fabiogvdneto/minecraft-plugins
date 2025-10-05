@@ -10,17 +10,17 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public abstract class AbstractJavaKeyedRepository<K, V> implements KeyedRepository<K, V> {
+public abstract class JavaKeyedRepository<V> implements KeyedRepository<String, V> {
+
+    private final static String EXT = ".ser";
 
     private final Path dir;
 
-    public AbstractJavaKeyedRepository(Path dir) {
+    public JavaKeyedRepository(Path dir) {
         this.dir = Objects.requireNonNull(dir);
     }
 
-    protected abstract K getKey(V data);
-
-    protected abstract K getKeyFromString(String id);
+    protected abstract String getKey(V data);
 
     @Override
     public void create() throws IOException {
@@ -40,29 +40,17 @@ public abstract class AbstractJavaKeyedRepository<K, V> implements KeyedReposito
         }
     }
 
-    @Override
-    public void storeOne(V data) throws IOException {
-        select(getKey(data)).store(data);
+    private boolean filter(Path path, BasicFileAttributes attributes) {
+        return attributes.isRegularFile() && path.getFileName().toString().endsWith(EXT);
     }
 
     @Override
-    public V fetchOne(K key) throws IOException {
-        return select(key).fetch();
-    }
-
-    @Override
-    public void deleteOne(K key) throws IOException {
-        select(key).delete();
-    }
-
-    private JavaSingleRepository<V> select(K key) {
-        return new JavaSingleRepository<>(dir.resolve(key + ".ser"));
-    }
-
-    @Override
-    public Collection<K> fetchKeys() throws IOException {
+    public Collection<String> fetchKeys() throws IOException {
         try (Stream<Path> files = Files.find(dir, 1, this::filter)) {
-            return files.map(this::getKeyFromPath).filter(Objects::nonNull).toList();
+            return files.map(path -> {
+                        String filename = path.getFileName().toString();
+                        return filename.substring(0, filename.length() - EXT.length());
+                    }).toList();
         }
     }
 
@@ -79,16 +67,22 @@ public abstract class AbstractJavaKeyedRepository<K, V> implements KeyedReposito
         }
     }
 
-    private boolean filter(Path path, BasicFileAttributes attributes) {
-        return attributes.isRegularFile() && path.getFileName().toString().endsWith(".ser");
+    private JavaSingleRepository<V> select(String key) {
+        return new JavaSingleRepository<>(dir.resolve(key + EXT));
     }
 
-    private K getKeyFromPath(Path path) {
-        String filename;
+    @Override
+    public V fetchOne(String key) throws IOException {
+        return select(key).fetch();
+    }
 
-        filename = path.getFileName().toString();
-        filename = filename.substring(0, filename.length() - 4);
+    @Override
+    public void storeOne(V data) throws IOException {
+        select(getKey(data)).store(data);
+    }
 
-        return getKeyFromString(filename);
+    @Override
+    public void deleteOne(String key) throws IOException {
+        select(key).delete();
     }
 }

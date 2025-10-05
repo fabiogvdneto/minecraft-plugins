@@ -38,5 +38,4 @@ public record LocationData(
             return null;
         }
     }
-
 }

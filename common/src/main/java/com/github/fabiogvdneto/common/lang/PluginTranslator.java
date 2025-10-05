@@ -14,7 +14,7 @@ public class PluginTranslator extends AbstractTranslator {
 
     public PluginTranslator() {
         super(new HashMap<>());
-        this.code = "null";
+        clearTranslations();
     }
 
     @Override
@@ -22,34 +22,33 @@ public class PluginTranslator extends AbstractTranslator {
         return code;
     }
 
-    public void clearTranslations() {
-        translations.clear();
+    private String buildPath() {
+        return "messages" + File.separatorChar + code + ".yml";
     }
 
     public void loadTranslations(Plugin plugin, String code) {
-        if (this.code.equals(code)) return;
+        this.code = code;
 
-        String path = path(code);
+        String path = buildPath();
 
         Configuration config = Plugins.createConfigurationFromResource(plugin, path);
 
-        for (Map.Entry<String, Object> entry : config.getDefaults().getValues(true).entrySet()) {
-            if (entry.getValue().getClass() == String.class) {
-                translations.put(entry.getKey(), (String) entry.getValue());
-            }
-        }
+        loadTranslations(config.getDefaults());
+        loadTranslations(config);
 
+        plugin.getLogger().info("Loaded message translations (" + path + ").");
+    }
+
+    private void loadTranslations(Configuration config) {
         for (Map.Entry<String, Object> entry : config.getValues(true).entrySet()) {
             if (entry.getValue().getClass() == String.class) {
                 translations.put(entry.getKey(), (String) entry.getValue());
             }
         }
-
-        this.code = code;
-        plugin.getLogger().info("Loaded message translations (" + path + ").");
     }
 
-    private String path(String code) {
-        return "messages" + File.separatorChar + code + ".yml";
+    public void clearTranslations() {
+        this.code = "empty";
+        this.translations.clear();
     }
 }

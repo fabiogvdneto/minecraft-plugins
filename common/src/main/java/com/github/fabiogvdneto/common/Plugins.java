@@ -1,11 +1,6 @@
 package com.github.fabiogvdneto.common;
 
-import com.github.fabiogvdneto.common.menu.Menu;
-import net.kyori.adventure.text.Component;
-import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -63,20 +58,11 @@ public final class Plugins {
      * If the configuration in the data folder does not exist, it will be created by saving the resource.
      */
     public static YamlConfiguration createConfigurationFromResource(Plugin plugin, String path) {
-        File file = new File(plugin.getDataFolder(), path);
-
+        YamlConfiguration config = loadConfiguration(plugin, path);
         YamlConfiguration defaults = loadResource(plugin, path);
-        YamlConfiguration config = file.isFile() ? YamlConfiguration.loadConfiguration(file) : new YamlConfiguration();
 
         plugin.saveResource(path, /* replace */ false);
         config.setDefaults(defaults);
         return config;
-    }
-
-    public static void createInventory(Plugin plugin, Player player) {
-        new Menu(9, Component.text("title"))
-                .withItem(5, ItemStack.of(Material.ACACIA_BOAT))
-                .withAction(5, event -> event.getWhoClicked().recalculatePermissions())
-                .open(player);
     }
 }
