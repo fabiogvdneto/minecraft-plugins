@@ -4,7 +4,7 @@ import com.github.fabiogvdneto.common.command.CommandHandler;
 import com.github.fabiogvdneto.common.exception.CommandArgumentException;
 import com.github.fabiogvdneto.common.exception.CommandSenderException;
 import com.github.fabiogvdneto.common.exception.PermissionRequiredException;
-import com.github.fabiogvdneto.kits.KitsPlugin;
+import com.github.fabiogvdneto.kits.KitPlugin;
 import com.github.fabiogvdneto.kits.exception.InventoryFullException;
 import com.github.fabiogvdneto.kits.exception.KitCooldownException;
 import com.github.fabiogvdneto.kits.exception.KitNotFoundException;
@@ -15,10 +15,11 @@ import org.bukkit.entity.Player;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
-public class CommandKit extends CommandHandler<KitsPlugin> {
+public class CommandKit extends CommandHandler<KitPlugin> {
 
-    public CommandKit(KitsPlugin plugin) {
+    public CommandKit(KitPlugin plugin) {
         super(plugin);
     }
 
@@ -33,7 +34,23 @@ public class CommandKit extends CommandHandler<KitsPlugin> {
 
             requirePermission(sender, plugin.getSettings().getKitPermission(kit.getName()));
 
-            kit.redeem((Player) sender);
+            boolean checkCooldown = sender.hasPermission(plugin.getSettings().getCooldownBypassPermission());
+            boolean checkPrice = sender.hasPermission(plugin.getSettings().getPriceBypassPermission());
+
+            // TODO: check price
+
+            Player player = (Player) sender;
+            UUID playerID = player.getUniqueId();
+
+            if (checkCooldown) {
+                kit.checkCooldown(playerID);
+            }
+
+            kit.collect(player.getInventory());
+
+            if (checkCooldown) {
+                kit.applyCooldown(playerID);
+            }
 
             plugin.getMessages().kitRedeemed(sender, kit.getName());
         } catch (PermissionRequiredException e) {

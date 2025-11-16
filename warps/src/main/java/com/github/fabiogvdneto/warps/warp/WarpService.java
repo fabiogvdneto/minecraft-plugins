@@ -7,7 +7,7 @@ import com.github.fabiogvdneto.warps.exception.WarpAlreadyExistsException;
 import com.github.fabiogvdneto.warps.exception.WarpNotFoundException;
 import com.github.fabiogvdneto.warps.repository.WarpRepository;
 import com.github.fabiogvdneto.warps.repository.data.WarpData;
-import com.github.fabiogvdneto.warps.repository.java.JavaWarpSingleRepository;
+import com.github.fabiogvdneto.warps.repository.gson.GsonWarpRepository;
 import org.bukkit.Location;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -66,7 +66,7 @@ public class WarpService implements WarpManager, PluginService {
     }
 
     private void createRepository() {
-        this.repository = new JavaWarpSingleRepository(plugin.getDataPath().resolve("data").resolve("warps.ser"));
+        this.repository = new GsonWarpRepository(plugin.getDataPath().resolve("data").resolve("warps.json"));
 
         try {
             repository.create();

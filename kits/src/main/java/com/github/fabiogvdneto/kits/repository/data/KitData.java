@@ -12,5 +12,4 @@ public record KitData(
         long price,
         byte[] contents,
         Map<UUID, Instant> availability
-) implements Serializable {
-}
+) implements Serializable { }

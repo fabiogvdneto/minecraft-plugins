@@ -2,36 +2,46 @@ package com.github.fabiogvdneto.kits.kit;
 
 import com.github.fabiogvdneto.common.PluginService;
 import com.github.fabiogvdneto.common.Plugins;
-import com.github.fabiogvdneto.kits.KitsPlugin;
+import com.github.fabiogvdneto.kits.KitPlugin;
 import com.github.fabiogvdneto.kits.exception.KitAlreadyExistsException;
 import com.github.fabiogvdneto.kits.exception.KitNotFoundException;
+import com.github.fabiogvdneto.kits.repository.GsonKitRepository;
 import com.github.fabiogvdneto.kits.repository.KitRepository;
 import com.github.fabiogvdneto.kits.repository.data.KitData;
-import com.github.fabiogvdneto.kits.repository.java.JavaKitRepository;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
 public class KitService implements KitManager, PluginService {
 
-    private final KitsPlugin plugin;
-    private final Map<String, Kit> cache = new HashMap<>();
-
+    private final KitPlugin plugin;
     private KitRepository repository;
+
     private BukkitTask autosaveTask;
 
-    public KitService(KitsPlugin plugin) {
+    private final Map<String, Kit> cache = new HashMap<>();
+    private final List<String> dirty = new LinkedList<>();
+
+    public KitService(KitPlugin plugin) {
         this.plugin = Objects.requireNonNull(plugin);
+    }
+
+    private String key(String name) {
+        return name.toLowerCase();
+    }
+
+    private String key(KitData data) {
+        return data.name().toLowerCase();
     }
 
     @Override
     public Collection<Kit> getAll() {
-        return cache.values().stream().filter(Objects::nonNull).toList();
+        return this.cache.values();
     }
 
     @Override
     public Kit get(String name) throws KitNotFoundException {
-        Kit kit = cache.get(getKeyFromName(name));
+        Kit kit = this.cache.get(key(name));
 
         if (kit == null)
             throw new KitNotFoundException(name);
@@ -41,15 +51,15 @@ public class KitService implements KitManager, PluginService {
 
     @Override
     public Kit create(String name) throws KitAlreadyExistsException {
-        String key = getKeyFromName(name);
+        String key = key(name);
 
-        if (cache.get(key) != null)
+        if (this.cache.get(key) != null)
             throw new KitAlreadyExistsException(name);
 
-        Kit kit = new SimpleKit(name);
-        cache.put(key, kit);
+        Kit kit = new SimpleKit(this.plugin, this, name);
+        this.cache.put(key, kit);
 
-        dirty();
+        dirty(key);
         return kit;
     }
 
@@ -57,19 +67,19 @@ public class KitService implements KitManager, PluginService {
     public Kit delete(String name) throws KitNotFoundException {
         // Replace the value by null instead of removing it,
         // so that it can be deleted from the repository later.
-        String key = getKeyFromName(name);
-        Kit removed = cache.replace(key, null);
+        String key = key(name);
+        Kit removed = this.cache.replace(key, null);
 
         if (removed == null)
             throw new KitNotFoundException(name);
 
-        dirty();
+        dirty(key);
         return removed;
     }
 
     @Override
     public boolean exists(String name) {
-        return cache.get(getKeyFromName(name)) != null;
+        return this.cache.get(key(name)) != null;
     }
 
     @Override
@@ -79,118 +89,101 @@ public class KitService implements KitManager, PluginService {
         loadKits();
     }
 
-    private void createRepository() {
-        this.repository = new JavaKitRepository(plugin.getDataPath().resolve("kits"));
-
-        try {
-            repository.create();
-        } catch (Exception e) {
-            plugin.getLogger().warning("Could not create the kits repository.");
-            plugin.getLogger().warning(e.getMessage());
-        }
-    }
-
     @Override
     public void disable() {
-        if (repository == null) return;
+        if (this.repository == null) return;
 
-        if (autosaveTask != null) {
-            autosaveTask.cancel();
+        if (this.autosaveTask != null) {
+            this.autosaveTask.cancel();
+            this.autosaveTask = null;
         }
 
-        save(memento());
-        cache.clear();
+        saveKits(dirty());
 
-        this.autosaveTask = null;
+        this.cache.clear();
         this.repository = null;
     }
 
     /* ---- Persistence ---- */
 
-    private void loadKits() {
+    private void createRepository() {
         try {
-            for (KitData data : repository.fetchAll()) {
-                cache.put(getKey(data), new SimpleKit(data));
-            }
-            plugin.getLogger().info("Loaded " + cache.size() + " kits.");
+            this.repository = new GsonKitRepository(this.plugin.getDataPath().resolve("kits"));
+            this.repository.create();
         } catch (Exception e) {
-            plugin.getLogger().warning("An error occurred while trying to load kits.");
-            plugin.getLogger().warning(e.getMessage());
+            this.plugin.getLogger().warning("Could not create the kits repository.");
+            this.plugin.getLogger().warning(e.getMessage());
         }
     }
 
-    private void save(Map<String, KitData> data) {
+    private void loadKits() {
+        try {
+            for (KitData data : this.repository.fetchAll()) {
+                this.cache.put(key(data), new SimpleKit(this.plugin, this, data));
+            }
+
+            this.plugin.getLogger().info("Loaded " + this.cache.size() + " kits.");
+        } catch (Exception e) {
+            this.plugin.getLogger().warning("An error occurred while trying to load kits.");
+            this.plugin.getLogger().warning(e.getMessage());
+        }
+    }
+
+    private void saveKits(Map<String, KitData> data) {
         int successCount = 0;
         int errorCount = 0;
 
         for (Map.Entry<String, KitData> entry : data.entrySet()) {
-            if (entry.getValue() == null) {
-                // Delete from the repository.
-                try {
-                    repository.deleteOne(entry.getKey());
-                    successCount++;
-                } catch (Exception e) {
-                    plugin.getLogger().warning("Could not delete a kit.");
-                    plugin.getLogger().warning(e.getMessage());
-                    errorCount++;
-                }
-            } else {
-                // Store to the repository.
-                try {
-                    repository.storeOne(entry.getValue());
-                    successCount++;
-                } catch (Exception e) {
-                    plugin.getLogger().warning("Could not delete a kit.");
-                    plugin.getLogger().warning(e.getMessage());
-                    errorCount++;
-                }
+            try {
+                this.repository.storeOne(entry.getKey(), entry.getValue());
+                successCount++;
+            } catch (Exception e) {
+                this.plugin.getLogger().warning("Could not store a kit.");
+                this.plugin.getLogger().warning(e.getMessage());
+                errorCount++;
             }
         }
 
-        plugin.getLogger().info("Modified " + successCount + " kits with " + errorCount + " errors.");
+        this.plugin.getLogger().info("Saved " + successCount + " kits with " + errorCount + " errors.");
     }
 
-    @Override
-    public void dirty() {
-        if (autosaveTask != null)
-            return;
-
-        // Wait 10 minutes before saving.
-        this.autosaveTask = Plugins.sync(plugin, () -> {
-            this.autosaveTask = null;
-            Map<String, KitData> data = memento();
-            Plugins.async(plugin, () -> save(data));
-        }, 10 * 60 * 20);
-    }
-
-    /* ---- Utilities ---- */
-
-    private String getKeyFromName(String name) {
-        return name.toLowerCase();
-    }
-
-    private String getKey(KitData data) {
-        return data.name().toLowerCase();
-    }
-
-    private Map<String, KitData> memento() {
+    /**
+     * Collect all data marked as dirty.
+     * @return current snapshot of all kits marked as dirty
+     */
+    private Map<String, KitData> dirty() {
         Map<String, KitData> data = new HashMap<>();
 
-        Iterator<Map.Entry<String, Kit>> it = cache.entrySet().iterator();
+        for (String key : this.dirty) {
+            Kit kit = this.cache.get(key);
 
-        while (it.hasNext()) {
-            Map.Entry<String, Kit> entry = it.next();
-
-            if (entry.getValue() == null) {
+            if (kit == null) {
                 // Null values represent data that was removed and must be deleted from the repository.
-                data.put(entry.getKey(), null);
-                it.remove();
+                data.put(key, null);
             } else {
                 // The remaining values must be stored in the repository.
-                data.put(entry.getKey(), ((SimpleKit) entry.getValue()).memento());
+                data.put(key, ((SimpleKit) kit).memento());
             }
         }
 
+        this.dirty.clear();
         return data;
+    }
+
+    /**
+     * Mark this kit as dirty so that it can be saved on the next batch.
+     * @param kit the kit that was modified
+     */
+    void dirty(String kit) {
+        this.dirty.add(key(kit));
+
+        if (this.autosaveTask == null) {
+            // Wait 10 minutes before saving.
+            this.autosaveTask = Plugins.sync(this.plugin, () -> {
+                this.autosaveTask = null;
+                Map<String, KitData> data = dirty();
+                Plugins.async(this.plugin, () -> saveKits(data));
+            }, 10 * 60 * 20);
+        }
     }
 }

@@ -14,21 +14,25 @@ public class ConfigurationService extends ConfigurationServiceBase {
         return config().getString("lang");
     }
 
-    public int getKitAutosaveMinutes() {
-        return config().getInt("kits.autosave-minutes");
-    }
-
     /* ---- Permissions ---- */
 
+    public String getCooldownBypassPermission() {
+        return "wasdkits.bypass.cooldown";
+    }
+
+    public String getPriceBypassPermission() {
+        return "wasdkits.bypass.price";
+    }
+
     public String getCommandPermission(Command cmd) {
-        return "kits.command." + cmd.getName().toLowerCase();
+        return "wasdkits.command." + cmd.getName().toLowerCase();
     }
 
     public String getCommandPermission(String cmd) {
-        return "kits.command." + cmd.toLowerCase();
+        return "wasdkits.command." + cmd.toLowerCase();
     }
 
     public String getKitPermission(String kitName) {
-        return "kits.kit." + kitName.toLowerCase();
+        return "wasdkits.redeem." + kitName.toLowerCase();
     }
 }

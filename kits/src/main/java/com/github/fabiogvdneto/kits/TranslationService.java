@@ -15,10 +15,10 @@ public class TranslationService implements PluginService {
 
     private static final String DEFAULT_LANGUAGE = "en";
 
-    private final KitsPlugin plugin;
+    private final KitPlugin plugin;
     private final PluginTranslator translator;
 
-    public TranslationService(KitsPlugin plugin) {
+    public TranslationService(KitPlugin plugin) {
         this.plugin = Objects.requireNonNull(plugin);
         this.translator = new PluginTranslator();
     }

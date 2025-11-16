@@ -2,7 +2,7 @@ package com.github.fabiogvdneto.common.repository;
 
 import java.util.Collection;
 
-public interface KeyedRepository<K, V> extends Repository {
+public interface KeyedRepository<K, V> extends EmptyRepository {
 
     Collection<K> fetchKeys() throws Exception;
 
@@ -10,8 +10,8 @@ public interface KeyedRepository<K, V> extends Repository {
 
     V fetchOne(K key) throws Exception;
 
-    void storeOne(V data) throws Exception;
-
     void deleteOne(K key) throws Exception;
+
+    void storeOne(K key, V data) throws Exception;
 
 }

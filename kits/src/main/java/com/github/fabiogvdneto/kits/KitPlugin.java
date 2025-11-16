@@ -8,7 +8,7 @@ import com.github.fabiogvdneto.kits.kit.KitManager;
 import com.github.fabiogvdneto.kits.kit.KitService;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class KitsPlugin extends JavaPlugin {
+public class KitPlugin extends JavaPlugin {
 
     private final ConfigurationService settings = new ConfigurationService(this);
     private final TranslationService messages = new TranslationService(this);

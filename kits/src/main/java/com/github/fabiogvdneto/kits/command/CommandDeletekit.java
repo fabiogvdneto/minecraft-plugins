@@ -3,15 +3,15 @@ package com.github.fabiogvdneto.kits.command;
 import com.github.fabiogvdneto.common.command.CommandHandler;
 import com.github.fabiogvdneto.common.exception.CommandArgumentException;
 import com.github.fabiogvdneto.common.exception.PermissionRequiredException;
-import com.github.fabiogvdneto.kits.KitsPlugin;
+import com.github.fabiogvdneto.kits.KitPlugin;
 import com.github.fabiogvdneto.kits.exception.KitNotFoundException;
 import com.github.fabiogvdneto.kits.kit.Kit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-public class CommandDeletekit extends CommandHandler<KitsPlugin> {
+public class CommandDeletekit extends CommandHandler<KitPlugin> {
 
-    public CommandDeletekit(KitsPlugin plugin) {
+    public CommandDeletekit(KitPlugin plugin) {
         super(plugin);
     }
 

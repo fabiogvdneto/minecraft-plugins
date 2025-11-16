@@ -1,8 +1,9 @@
-package com.github.fabiogvdneto.warps.repository.java;
+package com.github.fabiogvdneto.warps.repository.gson;
 
-import com.github.fabiogvdneto.common.repository.java.JavaKeyedRepository;
+import com.github.fabiogvdneto.common.repository.gson.GsonKeyedRepository;
 import com.github.fabiogvdneto.warps.repository.UserRepository;
 import com.github.fabiogvdneto.warps.repository.data.UserData;
+import com.google.gson.GsonBuilder;
 import org.bukkit.Bukkit;
 
 import java.io.IOException;
@@ -10,15 +11,10 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-public class JavaUserRepository extends JavaKeyedRepository<UserData> implements UserRepository {
+public class GsonUserRepository extends GsonKeyedRepository<UserData> implements UserRepository {
 
-    public JavaUserRepository(Path dir) {
-        super(dir);
-    }
-
-    @Override
-    protected String getKey(UserData data) {
-        return data.uid().toString();
+    public GsonUserRepository(Path dir) {
+        super(dir, new GsonBuilder().setPrettyPrinting().create(), UserData.class);
     }
 
     @Override

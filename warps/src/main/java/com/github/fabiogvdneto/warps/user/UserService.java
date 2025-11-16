@@ -5,7 +5,7 @@ import com.github.fabiogvdneto.common.Plugins;
 import com.github.fabiogvdneto.warps.WarpsPlugin;
 import com.github.fabiogvdneto.warps.repository.UserRepository;
 import com.github.fabiogvdneto.warps.repository.data.UserData;
-import com.github.fabiogvdneto.warps.repository.java.JavaUserRepository;
+import com.github.fabiogvdneto.warps.repository.gson.GsonUserRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -48,7 +48,7 @@ public class UserService implements UserManager, PluginService {
 
             Plugins.async(plugin, () -> {
                 try {
-                    UserData data = repository.fetchOne(userId);
+                    UserData data = repository.fetchOne(userId.toString());
                     SimpleUser user = (data == null) ? new SimpleUser(userId) : new SimpleUser(data);
                     future.complete(user);
                 } catch (Exception e) {
@@ -86,7 +86,7 @@ public class UserService implements UserManager, PluginService {
     }
 
     private void createRepository() {
-        this.repository = new JavaUserRepository(plugin.getDataPath().resolve("data").resolve("users"));
+        this.repository = new GsonUserRepository(plugin.getDataPath().resolve("data").resolve("users"));
 
         try {
             repository.create();
@@ -126,7 +126,7 @@ public class UserService implements UserManager, PluginService {
 
         for (UserData data : snapshot) {
             try {
-                repository.storeOne(data);
+                repository.storeOne(data.uid().toString(), data);
                 successCount++;
             } catch (Exception e) {
                 plugin.getLogger().warning("Could not save user data (uuid: " + data.uid() + ").");

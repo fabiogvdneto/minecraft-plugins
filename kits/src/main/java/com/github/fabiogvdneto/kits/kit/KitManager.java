@@ -40,11 +40,4 @@ public interface KitManager {
      */
     boolean exists(String name);
 
-    /**
-     * Set this data as dirty.
-     * Dirty means that this data was modified and needs to be saved.
-     * This method should be invoked everytime a kit is modified.
-     */
-    void dirty();
-
 }

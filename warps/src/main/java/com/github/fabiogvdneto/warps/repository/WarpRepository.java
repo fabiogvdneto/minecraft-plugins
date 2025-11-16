@@ -5,6 +5,4 @@ import com.github.fabiogvdneto.warps.repository.data.WarpData;
 
 import java.util.Collection;
 
-public interface WarpRepository extends SingleRepository<Collection<WarpData>> {
-
-}
+public interface WarpRepository extends SingleRepository<Collection<WarpData>> { }

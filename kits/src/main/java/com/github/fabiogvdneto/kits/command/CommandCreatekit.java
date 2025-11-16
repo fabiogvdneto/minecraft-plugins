@@ -4,7 +4,7 @@ import com.github.fabiogvdneto.common.command.CommandHandler;
 import com.github.fabiogvdneto.common.exception.CommandArgumentException;
 import com.github.fabiogvdneto.common.exception.CommandSenderException;
 import com.github.fabiogvdneto.common.exception.PermissionRequiredException;
-import com.github.fabiogvdneto.kits.KitsPlugin;
+import com.github.fabiogvdneto.kits.KitPlugin;
 import com.github.fabiogvdneto.kits.exception.KitAlreadyExistsException;
 import com.github.fabiogvdneto.kits.kit.Kit;
 import org.bukkit.command.Command;
@@ -15,9 +15,9 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class CommandCreatekit extends CommandHandler<KitsPlugin> {
+public class CommandCreatekit extends CommandHandler<KitPlugin> {
 
-    public CommandCreatekit(KitsPlugin plugin) {
+    public CommandCreatekit(KitPlugin plugin) {
         super(plugin);
     }
 

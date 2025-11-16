@@ -1,5 +1,6 @@
 package com.github.fabiogvdneto.kits.kit;
 
+import com.github.fabiogvdneto.kits.KitPlugin;
 import com.github.fabiogvdneto.kits.exception.InventoryFullException;
 import com.github.fabiogvdneto.kits.exception.KitCooldownException;
 import com.github.fabiogvdneto.kits.repository.data.KitData;
@@ -17,20 +18,29 @@ import java.util.stream.IntStream;
 
 class SimpleKit implements Kit {
 
+    private final KitPlugin plugin;
+    private final KitService service;
+
     private final Map<UUID, Instant> cooldownMap;
     private final String name;
     private Duration cooldown;
     private long price;
     private ItemStack[] contents;
 
-    public SimpleKit(String name) {
+    SimpleKit(KitPlugin plugin, KitService service, String name) {
+        this.plugin = plugin;
+        this.service = service;
+
         this.name = Objects.requireNonNull(name);
         this.cooldown = Duration.ZERO;
         this.contents = new ItemStack[0];
         this.cooldownMap = new HashMap<>();
     }
 
-    public SimpleKit(KitData data) {
+    SimpleKit(KitPlugin plugin, KitService service, KitData data) {
+        this.plugin = plugin;
+        this.service = service;
+
         this.name = data.name();
         this.cooldown = data.cooldown();
         this.price = data.price();
@@ -42,71 +52,86 @@ class SimpleKit implements Kit {
 
     @Override
     public String getName() {
-        return name;
-    }
-
-    @Override
-    public Duration getCooldown() {
-        return cooldown;
-    }
-
-    @Override
-    public long getPrice() {
-        return price;
+        return this.name;
     }
 
     @Override
     public ItemStack[] getContents() {
-        return contents;
-    }
-
-    @Override
-    public void setCooldown(Duration cooldown) {
-        this.cooldown = Objects.requireNonNull(cooldown);
-    }
-
-    @Override
-    public void setPrice(long price) {
-        this.price = Math.max(0, price);
+        return this.contents;
     }
 
     @Override
     public void setContents(ItemStack[] contents) {
         this.contents = Objects.requireNonNull(contents);
+        this.service.dirty(this.name);
     }
 
-    private void applyCooldown(UUID recipient) {
-        cooldownMap.put(recipient, Instant.now().plus(cooldown));
+    @Override
+    public long getPrice() {
+        return this.price;
+    }
+
+    @Override
+    public void setPrice(long price) {
+        this.price = Math.max(0, price);
+        this.service.dirty(this.name);
+    }
+
+    @Override
+    public Duration getCooldownDuration() {
+        return this.cooldown;
+    }
+
+    @Override
+    public void setCooldownDuration(Duration cooldown) {
+        this.cooldown = Objects.requireNonNull(cooldown);
+        this.service.dirty(this.name);
+    }
+
+    @Override
+    public Instant probeCooldown(UUID recipient) {
+        return this.cooldownMap.computeIfPresent(recipient,
+                // Remove cooldown if it has already ended.
+                (key, value) -> Instant.now().isBefore(value) ? value : null);
+    }
+
+    @Override
+    public void checkCooldown(UUID recipient) throws KitCooldownException {
+        Instant endOfCooldown = probeCooldown(recipient);
+
+        if (endOfCooldown != null)
+            throw new KitCooldownException(endOfCooldown);
+    }
+
+    @Override
+    public void applyCooldown(UUID recipient) {
+        this.cooldownMap.put(recipient, Instant.now().plus(this.cooldown));
+        this.service.dirty(this.name);
+    }
+
+    @Override
+    public void clearCooldown(UUID recipient) {
+        this.cooldownMap.remove(recipient);
+        this.service.dirty(this.name);
     }
 
     @Override
     public void collect(Inventory recipient) throws InventoryFullException {
         int[] freeSlots = findFreeSlots(recipient);
 
-        if (freeSlots.length < contents.length)
-            throw new InventoryFullException(contents.length, freeSlots.length);
+        if (freeSlots.length < this.contents.length)
+            throw new InventoryFullException(this.contents.length, freeSlots.length);
 
-        for (int i = 0; i < contents.length; i++) {
-            recipient.setItem(freeSlots[i], contents[i]);
+        for (int i = 0; i < this.contents.length; i++) {
+            recipient.setItem(freeSlots[i], this.contents[i]);
         }
     }
 
     @Override
-    public void redeemNow(Player recipient) throws InventoryFullException {
+    public void redeem(Player recipient) throws KitCooldownException, InventoryFullException {
+        checkCooldown(recipient.getUniqueId());
         collect(recipient.getInventory());
         applyCooldown(recipient.getUniqueId());
-    }
-
-    @Override
-    public void redeem(Player recipient) throws KitCooldownException, InventoryFullException {
-        Instant endOfCooldown = cooldownMap.computeIfPresent(recipient.getUniqueId(),
-                // Remove cooldown if it has already ended.
-                (key, value) -> Instant.now().isBefore(value) ? value : null);
-
-        if (endOfCooldown != null)
-            throw new KitCooldownException(endOfCooldown);
-
-        redeemNow(recipient);
     }
 
     private int[] findFreeSlots(Inventory inv) {
@@ -119,12 +144,12 @@ class SimpleKit implements Kit {
     }
 
     public void purgeCooldown() {
-        cooldownMap.values().removeIf(Instant.now()::isAfter);
+        this.cooldownMap.values().removeIf(Instant.now()::isAfter);
     }
 
     public KitData memento() {
         purgeCooldown();
         byte[] contentsNBT = ItemStack.serializeItemsAsBytes(this.contents);
-        return new KitData(name, cooldown, price, contentsNBT, Map.copyOf(cooldownMap));
+        return new KitData(this.name, this.cooldown, this.price, contentsNBT, Map.copyOf(this.cooldownMap));
     }
 }

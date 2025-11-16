@@ -1,6 +1,6 @@
 package com.github.fabiogvdneto.common.repository;
 
-public interface Repository {
+public interface EmptyRepository {
 
     void create() throws Exception;
 
