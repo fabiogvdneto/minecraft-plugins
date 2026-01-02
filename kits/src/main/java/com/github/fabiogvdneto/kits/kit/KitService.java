@@ -11,20 +11,54 @@ import com.github.fabiogvdneto.kits.repository.data.KitData;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class KitService implements KitManager, PluginService {
 
     private final KitPlugin plugin;
+
     private KitRepository repository;
-
-    private BukkitTask autosaveTask;
-
     private final Map<String, Kit> cache = new HashMap<>();
+
+    private BukkitTask autosaver;
     private final List<String> dirty = new LinkedList<>();
 
     public KitService(KitPlugin plugin) {
         this.plugin = Objects.requireNonNull(plugin);
     }
+
+    /* ---- SERVICE ---- */
+
+    @Override
+    public void enable() {
+        if (this.repository != null) {
+            // Module is already enabled.
+            return;
+        }
+
+        createRepository();
+        loadKits();
+    }
+
+    @Override
+    public void disable() {
+        if (this.repository == null) {
+            // Module is already disabled.
+            return;
+        }
+
+        if (this.autosaver != null) {
+            this.autosaver.cancel();
+            this.autosaver = null;
+        }
+
+        saveKits(dirty());
+
+        this.cache.clear();
+        this.repository = null;
+    }
+
+    /* ---- MANAGER ---- */
 
     private String key(String name) {
         return name.toLowerCase();
@@ -82,37 +116,14 @@ public class KitService implements KitManager, PluginService {
         return this.cache.get(key(name)) != null;
     }
 
-    @Override
-    public void enable() {
-        disable();
-        createRepository();
-        loadKits();
-    }
-
-    @Override
-    public void disable() {
-        if (this.repository == null) return;
-
-        if (this.autosaveTask != null) {
-            this.autosaveTask.cancel();
-            this.autosaveTask = null;
-        }
-
-        saveKits(dirty());
-
-        this.cache.clear();
-        this.repository = null;
-    }
-
-    /* ---- Persistence ---- */
+    /* ---- PERSISTENCE ---- */
 
     private void createRepository() {
         try {
             this.repository = new GsonKitRepository(this.plugin.getDataPath().resolve("kits"));
             this.repository.create();
         } catch (Exception e) {
-            this.plugin.getLogger().warning("Could not create the kits repository.");
-            this.plugin.getLogger().warning(e.getMessage());
+            this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying create the kit repository.", e);
         }
     }
 
@@ -124,8 +135,7 @@ public class KitService implements KitManager, PluginService {
 
             this.plugin.getLogger().info("Loaded " + this.cache.size() + " kits.");
         } catch (Exception e) {
-            this.plugin.getLogger().warning("An error occurred while trying to load kits.");
-            this.plugin.getLogger().warning(e.getMessage());
+            this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to load kits.", e);
         }
     }
 
@@ -138,8 +148,7 @@ public class KitService implements KitManager, PluginService {
                 this.repository.storeOne(entry.getKey(), entry.getValue());
                 successCount++;
             } catch (Exception e) {
-                this.plugin.getLogger().warning("Could not store a kit.");
-                this.plugin.getLogger().warning(e.getMessage());
+                this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to save a kit.", e);
                 errorCount++;
             }
         }
@@ -177,10 +186,10 @@ public class KitService implements KitManager, PluginService {
     void dirty(String kit) {
         this.dirty.add(key(kit));
 
-        if (this.autosaveTask == null) {
+        if (this.autosaver == null) {
             // Wait 10 minutes before saving.
-            this.autosaveTask = Plugins.sync(this.plugin, () -> {
-                this.autosaveTask = null;
+            this.autosaver = Plugins.sync(this.plugin, () -> {
+                this.autosaver = null;
                 Map<String, KitData> data = dirty();
                 Plugins.async(this.plugin, () -> saveKits(data));
             }, 10 * 60 * 20);

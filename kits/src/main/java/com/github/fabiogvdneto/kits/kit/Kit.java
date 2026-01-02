@@ -27,16 +27,16 @@ public interface Kit {
     void setCooldownDuration(Duration cooldown);
 
     /**
-     *
-     * @param recipient cooldown owner
-     * @return instant when the cooldown ends
+     * Returns the instant when the cooldown will end, or null if the cooldown already ended.
+     * @param recipient player requesting the kit
+     * @return cooldown for that player
      */
     Instant probeCooldown(UUID recipient);
 
     /**
-     *
-     * @param recipient cooldown owner
-     * @throws KitCooldownException if the cooldown is active
+     * Throws an exception if cooldown is still active.
+     * @param recipient player requesting the kit
+     * @throws KitCooldownException if cooldown is still active
      */
     void checkCooldown(UUID recipient) throws KitCooldownException;
 
