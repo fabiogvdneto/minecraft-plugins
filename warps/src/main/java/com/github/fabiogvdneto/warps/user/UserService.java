@@ -2,8 +2,8 @@ package com.github.fabiogvdneto.warps.user;
 
 import com.github.fabiogvdneto.common.PluginService;
 import com.github.fabiogvdneto.common.Plugins;
+import com.github.fabiogvdneto.common.repository.CacheManager;
 import com.github.fabiogvdneto.warps.WarpsPlugin;
-import com.github.fabiogvdneto.warps.repository.UserRepository;
 import com.github.fabiogvdneto.warps.repository.data.UserData;
 import com.github.fabiogvdneto.warps.repository.gson.GsonUserRepository;
 import org.bukkit.Bukkit;
@@ -13,6 +13,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.scheduler.BukkitTask;
 
+import javax.annotation.Nullable;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -20,11 +22,10 @@ import java.util.stream.Collectors;
 public class UserService implements UserManager, PluginService {
 
     private final WarpsPlugin plugin;
-    private final Map<UUID, CompletableFuture<User>> cache = new HashMap<>();
-
-    private UserRepository repository;
-    private BukkitTask autosaveTask;
     private Listener playerListener;
+
+    private CacheManager<UUID, UserData, User> cache;
+    private BukkitTask autosaveTask;
 
     public UserService(WarpsPlugin plugin) {
         this.plugin = Objects.requireNonNull(plugin);
@@ -32,42 +33,26 @@ public class UserService implements UserManager, PluginService {
 
     @Override
     public Collection<User> getAll() {
-        return cache.values().stream().map(future -> future.getNow(null)).filter(Objects::nonNull).toList();
+        return cache.getAll();
     }
 
     @Override
-    public User getIfCached(UUID userId) {
-        CompletableFuture<User> future = cache.get(userId);
-        return (future == null) ? null : future.getNow(null);
+    public User get(UUID userId) {
+        return cache.get(userId);
     }
 
     @Override
     public CompletableFuture<User> fetch(UUID userId) {
-        return cache.computeIfAbsent(userId, key -> {
-            CompletableFuture<User> future = new CompletableFuture<>();
-
-            Plugins.async(plugin, () -> {
-                try {
-                    UserData data = repository.fetchOne(userId.toString());
-                    SimpleUser user = (data == null) ? new SimpleUser(userId) : new SimpleUser(data);
-                    future.complete(user);
-                } catch (Exception e) {
-                    future.completeExceptionally(e);
-                }
-            });
-
-            return future.exceptionally(e -> {
-                plugin.getLogger().warning("Could not load user data (uuid: " + userId + ").");
-                plugin.getLogger().warning(e.getMessage());
-                cache.remove(userId);
-                return null;
-            });
-        });
+        return cache.fetch(userId);
     }
 
     @Override
     public void enable() {
-        disable();
+        if (cache != null) {
+            // Service is already enabled.
+            return;
+        }
+
         createRepository();
         registerEvents();
         loadOnlinePlayers();
@@ -86,10 +71,18 @@ public class UserService implements UserManager, PluginService {
     }
 
     private void createRepository() {
-        this.repository = new GsonUserRepository(plugin.getDataPath().resolve("data").resolve("users"));
+        Path path = plugin.getDataPath().resolve("data").resolve("users");
+        GsonUserRepository repository = new GsonUserRepository(path);
 
         try {
             repository.create();
+
+            this.cache = new CacheManager<>(plugin, repository) {
+                @Override
+                protected User parse(UUID uid, @Nullable UserData data) {
+                    return (data == null) ? new SimpleUser(uid) : new SimpleUser(data);
+                }
+            };
         } catch (Exception e) {
             plugin.getLogger().warning("Could not create the user repository.");
             plugin.getLogger().warning(e.getMessage());
@@ -98,7 +91,10 @@ public class UserService implements UserManager, PluginService {
 
     @Override
     public void disable() {
-        if (repository == null) return;
+        if (cache == null) {
+            // Service is already disabled.
+            return;
+        }
 
         PlayerJoinEvent.getHandlerList().unregister(playerListener);
         autosaveTask.cancel();
@@ -107,7 +103,7 @@ public class UserService implements UserManager, PluginService {
 
         this.playerListener = null;
         this.autosaveTask = null;
-        this.repository = null;
+        this.cache = null;
     }
 
     // ---- Persistence ----
@@ -126,7 +122,7 @@ public class UserService implements UserManager, PluginService {
 
         for (UserData data : snapshot) {
             try {
-                repository.storeOne(data.uid().toString(), data);
+                cache.getRepository().storeOne(data.uid(), data);
                 successCount++;
             } catch (Exception e) {
                 plugin.getLogger().warning("Could not save user data (uuid: " + data.uid() + ").");
@@ -139,12 +135,7 @@ public class UserService implements UserManager, PluginService {
     }
 
     private void purge(int purgeDays) {
-        try {
-            plugin.getLogger().info("Purged " + repository.purge(purgeDays) + " users.");
-        } catch (Exception e) {
-            plugin.getLogger().warning("Could not purge user data.");
-            plugin.getLogger().warning(e.getMessage());
-        }
+        // TODO
     }
 
     private void runAutosave() {
@@ -170,9 +161,7 @@ public class UserService implements UserManager, PluginService {
     // ---- Utilities ----
 
     private List<UserData> memento() {
-        return cache.values().stream()
-                .map(future -> future.getNow(null))
-                .filter(Objects::nonNull)
+        return cache.getAll().stream()
                 .map(user -> ((SimpleUser) user).memento())
                 .toList();
     }
@@ -182,6 +171,6 @@ public class UserService implements UserManager, PluginService {
                 .map(Player::getUniqueId)
                 .collect(Collectors.toUnmodifiableSet());
 
-        cache.keySet().retainAll(onlinePlayers);
+        cache.getKeys().retainAll(onlinePlayers);
     }
 }

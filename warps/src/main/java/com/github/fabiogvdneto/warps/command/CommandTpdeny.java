@@ -56,7 +56,7 @@ public class CommandTpdeny extends CommandHandler<WarpsPlugin> {
     public List<String> complete(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player player)) return Collections.emptyList();
 
-        Collection<TeleportationRequest> requests = plugin.getUsers().getIfCached(player.getUniqueId()).getTeleportationRequests();
+        Collection<TeleportationRequest> requests = plugin.getUsers().get(player.getUniqueId()).getTeleportationRequests();
 
         return requests.stream()
                 .map(TeleportationRequest::getSender)

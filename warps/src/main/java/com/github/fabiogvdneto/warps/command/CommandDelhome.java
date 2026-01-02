@@ -51,7 +51,7 @@ public class CommandDelhome extends CommandHandler<WarpsPlugin> {
     public List<String> complete(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player player) || args.length > 1) return Collections.emptyList();
 
-        Collection<Home> homes = plugin.getUsers().getIfCached(player.getUniqueId()).getHomes();
+        Collection<Home> homes = plugin.getUsers().get(player.getUniqueId()).getHomes();
         return homes.stream().map(Home::getName).toList();
     }
 }

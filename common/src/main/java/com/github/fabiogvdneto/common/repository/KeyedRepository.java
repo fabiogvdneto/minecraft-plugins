@@ -4,8 +4,6 @@ import java.util.Collection;
 
 public interface KeyedRepository<K, V> extends EmptyRepository {
 
-    Collection<K> fetchKeys() throws Exception;
-
     Collection<V> fetchAll() throws Exception;
 
     V fetchOne(K key) throws Exception;

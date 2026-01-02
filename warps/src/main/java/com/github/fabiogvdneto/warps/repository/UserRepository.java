@@ -3,8 +3,6 @@ package com.github.fabiogvdneto.warps.repository;
 import com.github.fabiogvdneto.common.repository.KeyedRepository;
 import com.github.fabiogvdneto.warps.repository.data.UserData;
 
-public interface UserRepository extends KeyedRepository<String, UserData> {
+import java.util.UUID;
 
-    int purge(int days) throws Exception;
-
-}
+public interface UserRepository extends KeyedRepository<UUID, UserData> { }

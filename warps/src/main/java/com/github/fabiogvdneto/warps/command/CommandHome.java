@@ -62,7 +62,7 @@ public class CommandHome extends CommandHandler<WarpsPlugin> {
         // Returning null will list all the online players.
         if (args.length == 2) return null;
 
-        Collection<Home> homes = plugin.getUsers().getIfCached(player.getUniqueId()).getHomes();
+        Collection<Home> homes = plugin.getUsers().get(player.getUniqueId()).getHomes();
         return homes.stream().map(Home::getName).toList();
     }
 }

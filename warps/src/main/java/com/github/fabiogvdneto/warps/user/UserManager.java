@@ -9,7 +9,7 @@ public interface UserManager {
 
     Collection<User> getAll();
 
-    User getIfCached(UUID userId);
+    User get(UUID userId);
 
     CompletableFuture<User> fetch(UUID userId);
 

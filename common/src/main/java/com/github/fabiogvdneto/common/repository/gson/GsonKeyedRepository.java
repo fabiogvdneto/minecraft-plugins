@@ -7,7 +7,7 @@ import com.google.gson.Gson;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 
-public class GsonKeyedRepository<V> extends FileKeyedRepository<V> {
+public class GsonKeyedRepository<K, V> extends FileKeyedRepository<K, V> {
 
     protected final Gson gson;
     protected final Type type;
