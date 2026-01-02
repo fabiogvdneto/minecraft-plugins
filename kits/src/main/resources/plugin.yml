@@ -2,7 +2,34 @@ name: "CursedKits"
 main: "com.github.fabiogvdneto.kits.KitsPlugin"
 version: "0.1"
 commands:
-  createkit: {}
-  deletekit: {}
-  kits: {}
-  kit: {}
+  kit:
+    description: "Claim a kit."
+  kits:
+    description: "List all kits available for the player."
+  createkit:
+    description: "Create a kit."
+  deletekit:
+    description: "Delete a kit."
+permissions:
+  kits.command.kit:
+    default: true
+  kits.command.kits:
+    default: true
+  kits.command.createkit:
+    default: op
+  kits.command.deletekit:
+    default: op
+  kits.command.*:
+    default: op
+    children:
+      kits.command.kit: true
+      kits.command.kits: true
+      kits.command.createkit: true
+      kits.command.deletekit: true
+  kits.*:
+    default: op
+    children:
+      kits.command.kit: true
+      kits.command.kits: true
+      kits.command.createkit: true
+      kits.command.deletekit: true

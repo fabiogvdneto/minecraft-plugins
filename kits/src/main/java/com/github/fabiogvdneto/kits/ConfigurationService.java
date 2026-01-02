@@ -17,22 +17,22 @@ public class ConfigurationService extends ConfigurationServiceBase {
     /* ---- Permissions ---- */
 
     public String getCooldownBypassPermission() {
-        return "wasdkits.bypass.cooldown";
+        return "kits.bypass.cooldown";
     }
 
     public String getPriceBypassPermission() {
-        return "wasdkits.bypass.price";
+        return "kits.bypass.price";
     }
 
     public String getCommandPermission(Command cmd) {
-        return "wasdkits.command." + cmd.getName().toLowerCase();
+        return "kits.command." + cmd.getName().toLowerCase();
     }
 
     public String getCommandPermission(String cmd) {
-        return "wasdkits.command." + cmd.toLowerCase();
+        return "kits.command." + cmd.toLowerCase();
     }
 
     public String getKitPermission(String kitName) {
-        return "wasdkits.redeem." + kitName.toLowerCase();
+        return "kits.redeem." + kitName.toLowerCase();
     }
 }
