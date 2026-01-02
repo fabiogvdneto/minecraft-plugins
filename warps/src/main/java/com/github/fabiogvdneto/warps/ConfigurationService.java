@@ -44,12 +44,12 @@ public final class ConfigurationService extends ConfigurationServiceBase {
         return config().getBoolean("teleporter.damage-allowed");
     }
 
-    public String getTeleportationCommandsAllowed() {
-        return config().getString("teleporter.commands-allowed");
+    public String getTeleportationCommandsAllowedMode() {
+        return config().getString("teleporter.commands-allowed.mode");
     }
 
-    public Set<String> getTeleportationCommandList() {
-        return config().getStringList("teleporter.command-list").stream()
+    public Set<String> getTeleportationCommandsAllowedList() {
+        return config().getStringList("teleporter.commands-allowed.list").stream()
                 .map(String::toLowerCase)
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -73,9 +73,10 @@ public final class ConfigurationService extends ConfigurationServiceBase {
     public int getHomeLimit(Permissible perm) {
         int i = config().getInt("homes.max-limit");
 
+        if (perm.hasPermission("warps.homes.limit.*")) return 99;
         if (perm.hasPermission("warps.homes.limit.max")) return i;
 
-        while (i > 0 && !perm.hasPermission("warps.home-limit." + i)) i--;
+        while (i > 0 && !perm.hasPermission("warps.homes.limit." + i)) i--;
 
         return i;
     }

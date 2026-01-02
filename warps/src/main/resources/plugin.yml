@@ -18,16 +18,29 @@ commands:
   tpdeny: {}
   tpcancel: {}
 permissions:
+  warps.homes.limit.*:
+    default: op
+  warps.homes.limit.max:
+    default: op
+  warps.command.warp:
+    default: op
+  warps.command.warps:
+    default: op
+  warps.command.setwarp:
+    default: op
+  warps.command.delwarp:
+    default: op
+  warps.teleporter.delay.0:
+    default: op
   warps.admin:
     description: "Grants advanced permissions for admins."
     default: op
     children:
       warps.teleporter.delay.0: true
-      warps.homes.limit.max: true
+      warps.homes.limit.*: true
       warps.command.setwarp: true
       warps.command.delwarp: true
       warps.command.tphere: true
-      warps.command.back: true
   warps.basics:
     description: "Grants basic permissions for everyone."
     default: not op
@@ -43,4 +56,3 @@ permissions:
       warps.command.tpaccept: true
       warps.command.tpdeny: true
       warps.command.tpcancel: true
-      warps.homes.limit.max: true

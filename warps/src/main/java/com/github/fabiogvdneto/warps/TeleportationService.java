@@ -48,10 +48,10 @@ public class TeleportationService implements PluginService, Teleporter {
     }
 
     private Predicate<String> buildCommandFilter() {
-        final String allowed = plugin.getSettings().getTeleportationCommandsAllowed().toLowerCase();
-        final Set<String> list = plugin.getSettings().getTeleportationCommandList();
+        final String mode = plugin.getSettings().getTeleportationCommandsAllowedMode().toLowerCase();
+        final Set<String> list = plugin.getSettings().getTeleportationCommandsAllowedList();
 
-        return switch (allowed) {
+        return switch (mode) {
             // Blacklist: block everything in the list.
             case "blacklist" -> (cmd ->  list.contains(cmd.toLowerCase()));
             // Whitelist: block everything not in the list.

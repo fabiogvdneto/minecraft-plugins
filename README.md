@@ -20,7 +20,7 @@ Each plugin lives in its own subfolder.
 Before building any plugin, make sure you have JDK version 17 or superior installed on your machine.
 Gradle is not required since it comes bundled with the repository.
 
-### Intallation
+### Installation
 
 You can either:
 
