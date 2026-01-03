@@ -30,7 +30,7 @@ public class CommandDelhome extends CommandHandler<WarpsPlugin> {
 
             Player player = (Player) sender;
 
-            plugin.getUsers().fetch(player.getUniqueId(), user -> {
+            plugin.getUsers().fetch(player.getUniqueId()).thenAccept(user -> {
                 try {
                     user.deleteHome(args[0]);
                     plugin.getMessages().homeDeleted(player);

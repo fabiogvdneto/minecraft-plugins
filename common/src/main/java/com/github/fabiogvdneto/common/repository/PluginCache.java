@@ -3,28 +3,22 @@ package com.github.fabiogvdneto.common.repository;
 import com.github.fabiogvdneto.common.Plugins;
 import org.bukkit.plugin.Plugin;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
-public abstract class CacheManager<K, D, V> {
+public class PluginCache<K, V> {
 
     private final Plugin plugin;
-    private final KeyedRepository<K, D> repository;
     private final Map<K, CompletableFuture<V>> cache;
 
-    public CacheManager(Plugin plugin, KeyedRepository<K, D> repository) {
+    public PluginCache(Plugin plugin) {
         this.plugin = plugin;
-        this.repository = Objects.requireNonNull(repository);
         this.cache = new HashMap<>();
-    }
-
-    public KeyedRepository<K, D> getRepository() {
-        return repository;
     }
 
     public Collection<K> getKeys() {
@@ -40,14 +34,13 @@ public abstract class CacheManager<K, D, V> {
         return (future == null) ? null : future.getNow(null);
     }
 
-    public CompletableFuture<V> fetch(K id) {
+    public CompletableFuture<V> fetch(K id, Callable<? extends V> loader) {
         return cache.computeIfAbsent(id, key -> {
             CompletableFuture<V> future = new CompletableFuture<>();
 
             Plugins.async(plugin, () -> {
                 try {
-                    D data = repository.fetchOne(key);
-                    future.complete(parse(key, data));
+                    future.complete(loader.call());
                 } catch (Exception e) {
                     future.completeExceptionally(e);
                 }
@@ -64,6 +57,4 @@ public abstract class CacheManager<K, D, V> {
     public void clear() {
         cache.clear();
     }
-
-    protected abstract V parse(K key, @Nullable D data);
 }

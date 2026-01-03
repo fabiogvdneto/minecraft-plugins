@@ -5,6 +5,8 @@ import com.github.fabiogvdneto.common.repository.KeyedRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -24,16 +26,30 @@ public abstract class FileKeyedRepository<K, V> implements KeyedRepository<K, V>
         Files.createDirectories(dir);
     }
 
+    public void delete(Path path) {
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            // Nothing we can do to help here.
+        }
+    }
+
     @Override
     public void delete() throws IOException {
-        try (Stream<Path> stream = Files.walk(dir)) {
-            stream.forEach(path -> {
-                try {
-                    Files.delete(path);
-                } catch (IOException e) {
-                    // Nothing we can do to help here.
-                }
-            });
+        try (Stream<Path> stream = Files.walk(dir, 1)) {
+            stream.forEach(this::delete);
+        }
+    }
+
+    @Override
+    public void purge(int purgeDays) throws IOException {
+        final Instant limit = Instant.now().minus(purgeDays, ChronoUnit.DAYS);
+
+        final Stream<Path> stream = Files.find(dir, 1, (path, attr) ->
+                attr.isRegularFile() && path.endsWith(ext) && attr.lastAccessTime().toInstant().isBefore(limit));
+
+        try (stream) {
+            stream.forEach(this::delete);
         }
     }
 
@@ -57,17 +73,17 @@ public abstract class FileKeyedRepository<K, V> implements KeyedRepository<K, V>
     }
 
     @Override
-    public V fetchOne(K key) throws Exception {
+    public V fetchOne(K key) throws IOException {
         return select(key).fetch();
     }
 
     @Override
-    public void deleteOne(K key) throws Exception {
+    public void deleteOne(K key) throws IOException {
         select(key).delete();
     }
 
     @Override
-    public void storeOne(K key, V data) throws Exception {
+    public void storeOne(K key, V data) throws IOException {
         if (data == null) {
             select(key).delete();
         } else {

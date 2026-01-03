@@ -3,7 +3,6 @@ package com.github.fabiogvdneto.warps.user;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 public interface UserManager {
 
@@ -13,7 +12,4 @@ public interface UserManager {
 
     CompletableFuture<User> fetch(UUID userId);
 
-    default void fetch(UUID userId, Consumer<User> callback) {
-        fetch(userId).thenAccept(callback);
-    }
 }

@@ -36,7 +36,7 @@ public class CommandTpa extends CommandHandler<WarpsPlugin> {
                 return;
             }
 
-            plugin.getUsers().fetch(target.getUniqueId(), user -> {
+            plugin.getUsers().fetch(target.getUniqueId()).thenAccept(user -> {
                 try {
                     Duration duration = Duration.ofSeconds(plugin.getSettings().getTeleportationRequestDuration());
 

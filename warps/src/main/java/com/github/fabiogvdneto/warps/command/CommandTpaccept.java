@@ -33,7 +33,7 @@ public class CommandTpaccept extends CommandHandler<WarpsPlugin> {
             Player player = (Player) sender;
             Player target = (args.length == 0) ? player : parsePlayer(args, 0);
 
-            plugin.getUsers().fetch(player.getUniqueId(), user -> {
+            plugin.getUsers().fetch(player.getUniqueId()).thenAccept(user -> {
                 try {
                     user.getTeleportationRequest(target.getUniqueId()).accept();
 

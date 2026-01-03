@@ -26,7 +26,7 @@ public class CommandSethome extends CommandHandler<WarpsPlugin> {
             Player player = (Player) sender;
             Player target = (args.length == 1 || !hasOthersPermission(player)) ? player : parsePlayer(args, 1);
 
-            plugin.getUsers().fetch(target.getUniqueId(), user -> {
+            plugin.getUsers().fetch(target.getUniqueId()).thenAccept(user -> {
                 if (player == target) {
                     int count = user.getHomes().size();
                     int limit = plugin.getSettings().getHomeLimit(player);
