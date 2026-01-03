@@ -31,7 +31,7 @@ public class CommandHome extends CommandHandler<WarpsPlugin> {
             Player player = (Player) sender;
             Player target = (args.length == 1) ? player : parsePlayer(args, 1);
 
-            plugin.getUsers().fetch(target.getUniqueId(), user -> {
+            plugin.getUsers().fetch(target.getUniqueId()).thenAccept(user -> {
                 try {
                     Home home = user.getHome(args[0]);
 

@@ -38,10 +38,10 @@ public class CommandHomes extends CommandHandler<WarpsPlugin> {
             };
 
             if (args.length == 0) {
-                plugin.getUsers().fetch(player.getUniqueId(), callback);
+                plugin.getUsers().fetch(player.getUniqueId()).thenAccept(callback);
             } else {
                 Player target = parsePlayer(args, 0);
-                plugin.getUsers().fetch(target.getUniqueId(), callback);
+                plugin.getUsers().fetch(target.getUniqueId()).thenAccept(callback);
             }
         } catch (PermissionRequiredException e) {
             plugin.getMessages().permissionRequired(sender);

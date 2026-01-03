@@ -2,34 +2,37 @@ package com.github.fabiogvdneto.warps.user;
 
 import com.github.fabiogvdneto.common.PluginService;
 import com.github.fabiogvdneto.common.Plugins;
-import com.github.fabiogvdneto.common.repository.CacheManager;
+import com.github.fabiogvdneto.common.repository.PluginCache;
 import com.github.fabiogvdneto.warps.WarpsPlugin;
+import com.github.fabiogvdneto.warps.repository.UserRepository;
 import com.github.fabiogvdneto.warps.repository.data.UserData;
 import com.github.fabiogvdneto.warps.repository.gson.GsonUserRepository;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.scheduler.BukkitTask;
 
-import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class UserService implements UserManager, PluginService {
 
     private final WarpsPlugin plugin;
-    private Listener playerListener;
+    private Listener playerJoinListener;
 
-    private CacheManager<UUID, UserData, User> cache;
+    private PluginCache<UUID, User> cache;
+    private UserRepository repository;
     private BukkitTask autosaveTask;
 
     public UserService(WarpsPlugin plugin) {
         this.plugin = Objects.requireNonNull(plugin);
     }
+
+    /* ---- CACHE ---- */
 
     @Override
     public Collection<User> getAll() {
@@ -43,134 +46,161 @@ public class UserService implements UserManager, PluginService {
 
     @Override
     public CompletableFuture<User> fetch(UUID userId) {
-        return cache.fetch(userId);
-    }
-
-    @Override
-    public void enable() {
-        if (cache != null) {
-            // Service is already enabled.
-            return;
-        }
-
-        createRepository();
-        registerEvents();
-        loadOnlinePlayers();
-        runAutosave();
-    }
-
-    private void registerEvents() {
-        this.playerListener = new Listener() {
-            @EventHandler
-            public void onJoin(PlayerJoinEvent event) {
-                fetch(event.getPlayer().getUniqueId());
+        return cache.fetch(userId, () -> {
+            try {
+                UserData data = repository.fetchOne(userId);
+                return (data == null) ? new SimpleUser(userId) : new SimpleUser(data);
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to load user data.", e);
+                plugin.getLogger().warning("User data seems to be corrupted. It will be overwritten.");
+                return new SimpleUser(userId);
             }
-        };
-
-        plugin.getServer().getPluginManager().registerEvents(playerListener, plugin);
+        });
     }
 
+    /**
+     * Can be combined with save() to safely store all user data to the repository asynchronously.
+     * @return a snapshot of all users present in the cache
+     */
+    private List<UserData> memento() {
+        return this.cache.getAll().stream().map(user -> ((SimpleUser) user).memento()).toList();
+    }
+
+    /**
+     * Purges all offline players from the cache.
+     * Data must be saved first to avoid data loss.
+     */
+    private void purgeCache() {
+        Set<UUID> onlinePlayers = this.plugin.getServer().getOnlinePlayers()
+                .stream()
+                .map(Player::getUniqueId)
+                .collect(Collectors.toUnmodifiableSet());
+
+        this.cache.getKeys().retainAll(onlinePlayers);
+    }
+
+    /* ---- PERSISTENCE ---- */
+
+    /**
+     * Attempts to create a new repository.
+     */
     private void createRepository() {
-        Path path = plugin.getDataPath().resolve("data").resolve("users");
-        GsonUserRepository repository = new GsonUserRepository(path);
+        Path path = this.plugin.getDataPath().resolve("users");
 
         try {
-            repository.create();
-
-            this.cache = new CacheManager<>(plugin, repository) {
-                @Override
-                protected User parse(UUID uid, @Nullable UserData data) {
-                    return (data == null) ? new SimpleUser(uid) : new SimpleUser(data);
-                }
-            };
+            this.repository = new GsonUserRepository(path);
+            this.repository.create();
         } catch (Exception e) {
-            plugin.getLogger().warning("Could not create the user repository.");
-            plugin.getLogger().warning(e.getMessage());
+            this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to create the user repository.", e);
         }
     }
 
-    @Override
-    public void disable() {
-        if (cache == null) {
-            // Service is already disabled.
-            return;
+    /**
+     * Purges old data from the repository.
+     */
+    private void purgeRepository() {
+        try {
+            this.repository.purge(plugin.getSettings().getUserPurgeDays());
+        } catch (Exception e) {
+            this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to purge user data from the repository.", e);
         }
-
-        PlayerJoinEvent.getHandlerList().unregister(playerListener);
-        autosaveTask.cancel();
-        save(memento());
-        cache.clear();
-
-        this.playerListener = null;
-        this.autosaveTask = null;
-        this.cache = null;
     }
 
-    // ---- Persistence ----
-
+    /**
+     * Loads user data from all online players to the cache
+     */
     private void loadOnlinePlayers() {
-        Player[] snapshot = Bukkit.getOnlinePlayers().toArray(Player[]::new);
+        Player[] snapshot = this.plugin.getServer().getOnlinePlayers().toArray(Player[]::new);
 
         for (Player player : snapshot) {
-            fetch(player.getUniqueId());
+            this.fetch(player.getUniqueId());
         }
     }
 
+    /**
+     * Saves all user data to the repository
+     * @param snapshot data to be stored
+     */
     private void save(Collection<UserData> snapshot) {
         int successCount = 0;
         int errorCount = 0;
 
         for (UserData data : snapshot) {
             try {
-                cache.getRepository().storeOne(data.uid(), data);
+                this.repository.storeOne(data.uid(), data);
                 successCount++;
             } catch (Exception e) {
-                plugin.getLogger().warning("Could not save user data (uuid: " + data.uid() + ").");
-                plugin.getLogger().warning(e.getMessage());
+                this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to store user data (uuid=" + data.uid() + ").", e);
                 errorCount++;
             }
         }
 
-        plugin.getLogger().info("Saved " + successCount + " users with " + errorCount + " errors.");
+        this.plugin.getLogger().info("Saved " + successCount + " users with " + errorCount + " errors.");
     }
 
-    private void purge(int purgeDays) {
-        // TODO
+    private void autosave() {
+        int ticks = this.plugin.getSettings().getUserAutosaveInterval() * 60 * 20;
+
+        if (ticks > 0) {
+            this.autosaveTask = Plugins.sync(plugin, () -> {
+                // Copy cached data so that it can be stored asynchronously without race conditions.
+                Collection<UserData> snapshot = this.memento();
+
+                // We can now save the snapshot asynchronously.
+                Plugins.async(plugin, () -> this.save(snapshot));
+
+                // Remove (purge) offline players from the cache.
+                this.purgeCache();
+            }, ticks, ticks);
+        }
     }
 
-    private void runAutosave() {
-        int ticks = plugin.getSettings().getUserAutosaveInterval() * 60 * 20;
-        int purgeDays = plugin.getSettings().getUserPurgeDays();
+    /* ---- BUKKIT ---- */
 
-        this.autosaveTask = Plugins.sync(plugin, () -> {
-            // Copy cached data so that it can be stored asynchronously without race conditions.
-            Collection<UserData> snapshot = memento();
+    private void registerEvents() {
+        this.playerJoinListener = new Listener() {
+            @EventHandler
+            public void onJoin(PlayerJoinEvent event) {
+                fetch(event.getPlayer().getUniqueId());
+            }
+        };
 
-            Plugins.async(plugin, () -> {
-                // Save cache to the repository.
-                save(snapshot);
-                // Remove (purge) old data from the repository.
-                purge(purgeDays);
-            });
-
-            // Remove (purge) offline players from the cache.
-            refreshCache();
-        }, ticks, ticks);
+        this.plugin.getServer().getPluginManager().registerEvents(playerJoinListener, plugin);
     }
 
-    // ---- Utilities ----
+    /* ---- SERVICE ---- */
 
-    private List<UserData> memento() {
-        return cache.getAll().stream()
-                .map(user -> ((SimpleUser) user).memento())
-                .toList();
+    @Override
+    public void enable() {
+        if (repository != null) {
+            // Service is already enabled.
+            return;
+        }
+
+        this.cache = new PluginCache<>(plugin);
+        this.createRepository();
+        this.purgeRepository();
+        this.registerEvents();
+        this.loadOnlinePlayers();
+        this.autosave();
     }
 
-    private void refreshCache() {
-        Set<UUID> onlinePlayers = plugin.getServer().getOnlinePlayers().stream()
-                .map(Player::getUniqueId)
-                .collect(Collectors.toUnmodifiableSet());
+    @Override
+    public void disable() {
+        if (repository == null) {
+            // Service is already disabled.
+            return;
+        }
 
-        cache.getKeys().retainAll(onlinePlayers);
+        this.autosaveTask.cancel();
+        this.autosaveTask = null;
+
+        PlayerJoinEvent.getHandlerList().unregister(playerJoinListener);
+        this.playerJoinListener = null;
+
+        save(memento());
+        this.cache.clear();
+        this.cache = null;
+        this.repository = null;
     }
 }

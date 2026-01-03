@@ -14,18 +14,21 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 public class WarpService implements WarpManager, PluginService {
 
     private final WarpsPlugin plugin;
-    private final Map<String, Place> cache = new HashMap<>();
 
+    private final Map<String, Place> cache = new HashMap<>();
     private BukkitTask autosaveTask;
     private WarpRepository repository;
 
     public WarpService(WarpsPlugin plugin) {
         this.plugin = plugin;
     }
+
+    /* ---- CACHE ---- */
 
     @Override
     public Collection<Place> getAll() {
@@ -58,23 +61,20 @@ public class WarpService implements WarpManager, PluginService {
             throw new WarpNotFoundException();
     }
 
-    @Override
-    public void enable() {
-        disable();
-        createRepository();
-        autosave();
+    private Collection<WarpData> memento() {
+        return cache.values().stream().map(warp -> ((SimpleWarp) warp).memento()).toList();
     }
 
-    private void createRepository() {
-        this.repository = new GsonWarpRepository(plugin.getDataPath().resolve("data").resolve("warps.json"));
+    /* ---- PERSISTENCE ---- */
 
+    private void createRepository() {
         try {
-            repository.create();
-            repository.fetch().forEach(data -> cache.put(data.name().toLowerCase(), new SimpleWarp(data)));
-            plugin.getLogger().info("Loaded " + cache.size() + " warps.");
+            this.repository = new GsonWarpRepository(plugin.getDataPath().resolve("warps.json"));
+            this.repository.create();
+            this.repository.fetch().forEach(data -> cache.put(data.name().toLowerCase(), new SimpleWarp(data)));
+            this.plugin.getLogger().info("Loaded " + cache.size() + " warps.");
         } catch (Exception e) {
-            plugin.getLogger().warning("Could not load warp data.");
-            plugin.getLogger().warning(e.getMessage());
+            this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to load warp data.", e);
         }
     }
 
@@ -82,23 +82,11 @@ public class WarpService implements WarpManager, PluginService {
         int ticks = plugin.getSettings().getWarpAutosaveInterval() * 60 * 20;
 
         if (ticks > 0) {
-            // 36.000 ticks = 30 minutes
             this.autosaveTask = Plugins.sync(plugin, () -> {
                 Collection<WarpData> data = memento();
                 Plugins.async(plugin, () -> save(data));
             }, ticks, ticks);
         }
-    }
-
-    @Override
-    public void disable() {
-        if (repository == null)  return;
-
-        autosaveTask.cancel();
-        save(memento());
-
-        this.autosaveTask = null;
-        this.repository = null;
     }
 
     private void save(Collection<WarpData> data) {
@@ -111,11 +99,30 @@ public class WarpService implements WarpManager, PluginService {
         }
     }
 
-    private Collection<WarpData> memento() {
-        return cache.values().stream().map(warp -> ((SimpleWarp) warp).memento()).toList();
+    /* ---- SERVICE ---- */
+
+    @Override
+    public void enable() {
+        if (repository != null) {
+            // Service is already enabled.
+            return;
+        }
+
+        this.createRepository();
+        this.autosave();
     }
 
-    public WarpRepository getRepository() {
-        return repository;
+    @Override
+    public void disable() {
+        if (repository == null) {
+            // Service is already disabled.
+            return;
+        }
+
+        this.autosaveTask.cancel();
+        this.autosaveTask = null;
+
+        this.save(memento());
+        this.repository = null;
     }
 }
