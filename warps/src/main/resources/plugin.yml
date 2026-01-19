@@ -1,6 +1,6 @@
 name: CursedWarps
 version: '0.1'
-main: com.github.fabiogvdneto.warps.WarpsPlugin
+main: com.github.fabiogvdneto.cursedwarps.WarpPlugin
 api-version: '1.21'
 commands:
   spawn: {}

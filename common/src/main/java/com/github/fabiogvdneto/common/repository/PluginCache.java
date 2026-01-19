@@ -34,7 +34,7 @@ public class PluginCache<K, V> {
         return (future == null) ? null : future.getNow(null);
     }
 
-    public CompletableFuture<V> fetch(K id, Callable<? extends V> loader) {
+    public CompletableFuture<V> load(K id, Callable<? extends V> loader) {
         return cache.computeIfAbsent(id, key -> {
             CompletableFuture<V> future = new CompletableFuture<>();
 
@@ -48,7 +48,7 @@ public class PluginCache<K, V> {
 
             return future.exceptionally(e -> {
                 plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to load data.", e);
-                cache.remove(id);
+                cache.remove(key);
                 return null;
             });
         });

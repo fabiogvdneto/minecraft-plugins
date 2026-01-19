@@ -24,11 +24,18 @@ public abstract class CommandHandler<P extends JavaPlugin> implements CommandExe
 
     /* ---- Registration ---- */
 
-    public final void registerAs(String label) {
-        registerAs(plugin.getCommand(label));
+    /**
+     * Register this command handler as an executor and tab completer of the given command.
+     */
+    public final void register(String label) {
+        register(plugin.getCommand(label));
     }
 
-    public final void registerAs(PluginCommand command) {
+    /**
+     * Register this command handler as an executor and tab completer of the given command.
+     */
+    public final void register(PluginCommand command) {
+        Objects.requireNonNull(command, "Can't register a null command.");
         command.setExecutor(this);
         command.setTabCompleter(this);
     }

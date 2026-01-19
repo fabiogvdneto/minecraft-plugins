@@ -26,14 +26,6 @@ public abstract class FileKeyedRepository<K, V> implements KeyedRepository<K, V>
         Files.createDirectories(dir);
     }
 
-    public void delete(Path path) {
-        try {
-            Files.delete(path);
-        } catch (IOException e) {
-            // Nothing we can do to help here.
-        }
-    }
-
     @Override
     public void delete() throws IOException {
         try (Stream<Path> stream = Files.walk(dir, 1)) {
@@ -46,17 +38,11 @@ public abstract class FileKeyedRepository<K, V> implements KeyedRepository<K, V>
         final Instant limit = Instant.now().minus(purgeDays, ChronoUnit.DAYS);
 
         final Stream<Path> stream = Files.find(dir, 1, (path, attr) ->
-                attr.isRegularFile() && path.endsWith(ext) && attr.lastAccessTime().toInstant().isBefore(limit));
+                attr.isRegularFile() && path.endsWith(ext) && attr.lastAccessTime().toInstant().isBefore(limit)
+        );
 
-        try (stream) {
-            stream.forEach(this::delete);
-        }
-    }
-
-    public abstract FileSingleRepository<V> select(Path path);
-
-    public FileSingleRepository<V> select(K key) {
-        return select(dir.resolve(key + ext));
+        stream.forEach(this::delete);
+        stream.close();
     }
 
     @Override
@@ -90,4 +76,18 @@ public abstract class FileKeyedRepository<K, V> implements KeyedRepository<K, V>
             select(key).store(data);
         }
     }
+
+    public FileSingleRepository<V> select(K key) {
+        return select(dir.resolve(key + ext));
+    }
+
+    public void delete(Path path) {
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            // Nothing we can do to help here.
+        }
+    }
+
+    public abstract FileSingleRepository<V> select(Path path);
 }

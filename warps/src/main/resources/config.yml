@@ -16,10 +16,6 @@ teleporter:
     mode: whitelist
     list: [ 'a', 'f', 'g', '.', 'tell', 'tpcancel' ]
 
-warps:
-  # Autosave in minutes.
-  autosave-minutes: 30
-
 homes:
   # Maximum number of homes a player may own.
   # This value works together with the permission 'warps.homes.limit.<0::max-limit>'.

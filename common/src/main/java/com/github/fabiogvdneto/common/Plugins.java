@@ -1,6 +1,7 @@
 package com.github.fabiogvdneto.common;
 
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -9,6 +10,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public final class Plugins {
+
+    public static void registerEvents(Plugin plugin, Listener listener) {
+        plugin.getServer().getPluginManager().registerEvents(listener, plugin);
+    }
 
     public static BukkitTask async(Plugin plugin, Runnable task) {
         return plugin.getServer().getScheduler().runTaskAsynchronously(plugin, task);
@@ -34,6 +39,9 @@ public final class Plugins {
         return plugin.getServer().getScheduler().runTaskTimer(plugin, task, delay, period);
     }
 
+    /**
+     * Loads a yaml configuration from the plugin maven/jar resources.
+     */
     public static YamlConfiguration loadResource(Plugin plugin, String path) {
         InputStream resource = plugin.getResource(path);
 
@@ -44,7 +52,7 @@ public final class Plugins {
     }
 
     /**
-     * Loads a yaml configuration file from the data folder.
+     * Loads a yaml configuration from the plugin data folder.
      */
     public static YamlConfiguration loadConfiguration(Plugin plugin, String path) {
         File file = new File(plugin.getDataFolder(), path);
@@ -57,7 +65,7 @@ public final class Plugins {
      * The configuration from the data folder overrides the configuration from maven resources.
      * If the configuration in the data folder does not exist, it will be created by saving the resource.
      */
-    public static YamlConfiguration createConfigurationFromResource(Plugin plugin, String path) {
+    public static YamlConfiguration loadConfigurationWithDefaults(Plugin plugin, String path) {
         YamlConfiguration config = loadConfiguration(plugin, path);
         YamlConfiguration defaults = loadResource(plugin, path);
 

@@ -4,47 +4,47 @@ import com.github.fabiogvdneto.kits.command.CommandCreatekit;
 import com.github.fabiogvdneto.kits.command.CommandDeletekit;
 import com.github.fabiogvdneto.kits.command.CommandKit;
 import com.github.fabiogvdneto.kits.command.CommandKits;
-import com.github.fabiogvdneto.kits.kit.KitManager;
+import com.github.fabiogvdneto.kits.kit.KitModule;
 import com.github.fabiogvdneto.kits.kit.KitService;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class KitPlugin extends JavaPlugin {
 
-    private final ConfigurationService settings = new ConfigurationService(this);
-    private final TranslationService messages = new TranslationService(this);
-    private final KitService kits = new KitService(this);
+    private final ConfigurationModule settings = new ConfigurationModule(this);
+    private final TranslationModule messages = new TranslationModule(this);
+    private final KitModule kits = new KitModule(this);
 
     @Override
     public void onEnable() {
-        settings.enable();
-        messages.enable();
-        kits.enable();
+        settings.load();
+        messages.load();
+        kits.load();
         registerCommands();
-    }
-
-    private void registerCommands() {
-        new CommandCreatekit(this).registerAs("createkit");
-        new CommandDeletekit(this).registerAs("deletekit");
-        new CommandKits(this).registerAs("kits");
-        new CommandKit(this).registerAs("kit");
     }
 
     @Override
     public void onDisable() {
-        settings.disable();
-        messages.disable();
-        kits.disable();
+        settings.unload();
+        messages.unload();
+        kits.unload();
     }
 
-    public ConfigurationService getSettings() {
+    private void registerCommands() {
+        new CommandCreatekit(this).register("createkit");
+        new CommandDeletekit(this).register("deletekit");
+        new CommandKits(this).register("kits");
+        new CommandKit(this).register("kit");
+    }
+
+    public ConfigurationModule getSettings() {
         return settings;
     }
 
-    public TranslationService getMessages() {
+    public TranslationModule getMessages() {
         return messages;
     }
 
-    public KitManager getKits() {
+    public KitService getKits() {
         return kits;
     }
 }

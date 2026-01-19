@@ -15,7 +15,8 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "minecraft-plugins"
+rootProject.name = "minecraft"
 include("common")
-include("warps")
 include("kits")
+include("warps")
+include("menus")
