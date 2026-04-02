@@ -19,4 +19,3 @@ rootProject.name = "minecraft"
 include("common")
 include("kits")
 include("warps")
-include("menus")
