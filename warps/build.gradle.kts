@@ -12,5 +12,5 @@ dependencies {
 }
 
 tasks.shadowJar {
-    relocate("com.github.fabiogvdneto.common", "com.github.fabiogvdneto.greatwarps.common")
+    relocate("com.github.fabiogvdneto.common", "com.github.fabiogvdneto.warps.common")
 }
