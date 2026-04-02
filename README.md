@@ -9,7 +9,7 @@ Each plugin lives in its own subfolder.
 
 * **CursedWarps** [[more]](https://github.com/fabiogvdneto/minecraft-plugins/tree/main/warps) \
   This plugin is more than a simple warp plugin. It also gives your players the ability to
-  create their own "homes" and send teleportation requests to other players (tpa).
+  create their own homes and send teleportation requests to other players.
 * **CursedKits** [[more]](https://github.com/fabiogvdneto/minecraft-plugins/tree/main/kits) \
   A kit plugin, as simple as it should be. Create kits for your players with ease without 
   having to touch configuration files or GUIs. It supports every item you can imagine,
@@ -20,7 +20,7 @@ Each plugin lives in its own subfolder.
 Before building any plugin, make sure you have JDK version 17 or superior installed on your machine.
 Gradle is not required since it comes bundled with the repository.
 
-### Installation
+### Build
 
 You can either:
 
@@ -34,4 +34,4 @@ You can either:
    ./gradlew kits:shadowJar
    ```
 
-The jar files will be created in `<module>/build/libs/<plugin-name>.jar`.
+The jar files will be created in `<module>/build/libs/<plugin-name>-all.jar`.
