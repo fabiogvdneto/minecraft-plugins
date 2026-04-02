@@ -24,9 +24,9 @@ public class KitPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        settings.unload();
-        messages.unload();
         kits.unload();
+        messages.unload();
+        settings.unload();
     }
 
     private void registerCommands() {

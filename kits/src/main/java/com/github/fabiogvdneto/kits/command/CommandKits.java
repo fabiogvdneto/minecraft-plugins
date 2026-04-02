@@ -15,19 +15,18 @@ public class CommandKits extends CommandHandler<KitPlugin> {
         super(plugin);
     }
 
+    private String kitPermission(String kitName) {
+        return plugin.getSettings().getKitPermission(kitName);
+    }
+
     @Override
     public void execute(CommandSender sender, Command cmd, String label, String[] args) {
         try {
             requirePermission(sender, plugin.getSettings().getCommandPermission(cmd));
 
             Collection<String> kits = plugin.getKits().getAll().stream().map(Kit::getName)
-                    .filter(kitName -> sender.hasPermission(plugin.getSettings().getKitPermission(kitName)))
+                    .filter(kitName -> sender.hasPermission(kitPermission(kitName)))
                     .toList();
-
-            if (kits.isEmpty()) {
-                plugin.getMessages().kitListEmpty(sender);
-                return;
-            }
 
             plugin.getMessages().kitList(sender, kits);
         } catch (PermissionRequiredException e) {

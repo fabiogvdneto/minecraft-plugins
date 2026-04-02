@@ -2,6 +2,7 @@ package com.github.fabiogvdneto.cursedwarps.command;
 
 import com.github.fabiogvdneto.common.command.CommandHandler;
 import com.github.fabiogvdneto.common.exception.CommandArgumentException;
+import com.github.fabiogvdneto.common.exception.CommandSenderException;
 import com.github.fabiogvdneto.common.exception.PermissionRequiredException;
 import com.github.fabiogvdneto.cursedwarps.WarpPlugin;
 import org.bukkit.command.Command;
@@ -22,6 +23,8 @@ public class CommandTphere extends CommandHandler<WarpPlugin> {
             requireArguments(args, 1);
 
             parsePlayer(args, 0).teleport((Player) sender);
+        } catch (CommandSenderException e) {
+            plugin.getMessages().playersOnly(sender);
         } catch (PermissionRequiredException e) {
             plugin.getMessages().permissionRequired(sender);
         } catch (CommandArgumentException e) {

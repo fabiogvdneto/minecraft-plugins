@@ -24,8 +24,8 @@ public final class WarpPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         WarpPlugin.INSTANCE = this;
-        messages.load();
         settings.load();
+        messages.load();
         teleporter.load();
         warps.load();
         users.load();

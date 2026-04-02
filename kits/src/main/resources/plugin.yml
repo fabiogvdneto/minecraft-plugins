@@ -1,5 +1,5 @@
 name: "CursedKits"
-main: "com.github.fabiogvdneto.kits.KitsPlugin"
+main: "com.github.fabiogvdneto.kits.KitPlugin"
 version: "0.1"
 commands:
   kit:

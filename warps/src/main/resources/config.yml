@@ -1,5 +1,5 @@
 # Options available: 'en' | 'pt'.
-lang: 'en'
+language: 'en'
 
 teleporter:
   # Maximum delay a teleportation may take, in seconds.

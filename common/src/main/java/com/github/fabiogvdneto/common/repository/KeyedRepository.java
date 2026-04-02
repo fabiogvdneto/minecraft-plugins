@@ -21,6 +21,7 @@ public interface KeyedRepository<K, V> extends EmptyRepository {
 
     /**
      * Stores data to the repository.
+     * If data is null, it will be purged.
      */
     void storeOne(K key, V data) throws Exception;
 

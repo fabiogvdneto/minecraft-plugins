@@ -1,6 +1,5 @@
-package com.github.fabiogvdneto.common.repository.gson;
+package com.github.fabiogvdneto.common.repository.flatfile;
 
-import com.github.fabiogvdneto.common.repository.file.FileSingleRepository;
 import com.google.gson.Gson;
 
 import java.io.IOException;

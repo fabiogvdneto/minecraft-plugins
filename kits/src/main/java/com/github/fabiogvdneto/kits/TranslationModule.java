@@ -7,12 +7,10 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
 import java.util.Collection;
 
-public class TranslationModule extends TranslationModuleBase {
-
-    private static final String DEFAULT_LANGUAGE = "en";
+public final class TranslationModule extends TranslationModuleBase {
 
     public TranslationModule(KitPlugin plugin) {
-        super(plugin, plugin.getSettings()::getLanguage);
+        super(plugin);
     }
 
     /* ---- Messages ---- */
@@ -76,7 +74,12 @@ public class TranslationModule extends TranslationModuleBase {
     }
 
     public void kitList(Audience target, Collection<String> kits) {
-        Component separator = component("kit.list.separator");
+        if (kits.isEmpty()) {
+            kitListEmpty(target);
+            return;
+        }
+
+        Component separator = component("kit.list.separator").orElse(Component.empty());
         Component list = kits.stream().map(Component::text).collect(Component.toComponent(separator));
 
         message(target, "kit.list.base", Placeholder.component("list", list));

@@ -11,7 +11,7 @@ import java.util.Collection;
 public final class TranslationModule extends TranslationModuleBase {
 
     public TranslationModule(WarpPlugin plugin) {
-        super(plugin, plugin.getSettings()::getLanguage);
+        super(plugin);
     }
 
     /* ---- Misc ---- */
@@ -120,7 +120,7 @@ public final class TranslationModule extends TranslationModuleBase {
             return;
         }
 
-        Component sep = component("warp.list.separator");
+        Component sep = component("warp.list.separator").orElse(Component.empty());
         Component list = warps.stream().map(Component::text).collect(Component.toComponent(sep));
 
         message(target, "warp.list.base", Placeholder.component("list", list));
@@ -154,7 +154,7 @@ public final class TranslationModule extends TranslationModuleBase {
             return;
         }
 
-        Component sep = component("home.list.separator");
+        Component sep = component("home.list.separator").orElse(Component.empty());
         Component list = homes.stream().map(Component::text).collect(Component.toComponent(sep));
 
         message(target, "home.list.base", Placeholder.component("list", list));

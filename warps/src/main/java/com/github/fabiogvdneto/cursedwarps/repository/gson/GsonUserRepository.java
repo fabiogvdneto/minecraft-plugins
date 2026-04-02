@@ -1,6 +1,6 @@
 package com.github.fabiogvdneto.cursedwarps.repository.gson;
 
-import com.github.fabiogvdneto.common.repository.gson.GsonKeyedRepository;
+import com.github.fabiogvdneto.common.repository.flatfile.GsonKeyedRepository;
 import com.github.fabiogvdneto.cursedwarps.repository.UserRepository;
 import com.github.fabiogvdneto.cursedwarps.repository.data.UserData;
 import com.google.gson.GsonBuilder;

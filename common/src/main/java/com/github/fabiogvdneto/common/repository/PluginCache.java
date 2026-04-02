@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 
 public class PluginCache<K, V> {
 
@@ -34,24 +33,8 @@ public class PluginCache<K, V> {
         return (future == null) ? null : future.getNow(null);
     }
 
-    public CompletableFuture<V> load(K id, Callable<? extends V> loader) {
-        return cache.computeIfAbsent(id, key -> {
-            CompletableFuture<V> future = new CompletableFuture<>();
-
-            Plugins.async(plugin, () -> {
-                try {
-                    future.complete(loader.call());
-                } catch (Exception e) {
-                    future.completeExceptionally(e);
-                }
-            });
-
-            return future.exceptionally(e -> {
-                plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to load data.", e);
-                cache.remove(key);
-                return null;
-            });
-        });
+    public CompletableFuture<V> load(K id, Callable<V> loader) {
+        return cache.computeIfAbsent(id, key -> Plugins.future(plugin, loader));
     }
 
     public void clear() {

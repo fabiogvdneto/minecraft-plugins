@@ -8,11 +8,27 @@ import org.bukkit.scheduler.BukkitTask;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 
 public final class Plugins {
 
     public static void registerEvents(Plugin plugin, Listener listener) {
         plugin.getServer().getPluginManager().registerEvents(listener, plugin);
+    }
+
+    public static <T> CompletableFuture<T> future(Plugin plugin, Callable<T> loader) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+
+        Plugins.async(plugin, () -> {
+            try {
+                future.complete(loader.call());
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+            }
+        });
+
+        return future;
     }
 
     public static BukkitTask async(Plugin plugin, Runnable task) {

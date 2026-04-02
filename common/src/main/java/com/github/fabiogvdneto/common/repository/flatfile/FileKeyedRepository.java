@@ -1,4 +1,4 @@
-package com.github.fabiogvdneto.common.repository.file;
+package com.github.fabiogvdneto.common.repository.flatfile;
 
 import com.github.fabiogvdneto.common.repository.KeyedRepository;
 

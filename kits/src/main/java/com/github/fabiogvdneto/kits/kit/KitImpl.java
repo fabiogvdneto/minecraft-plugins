@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -42,10 +43,16 @@ class KitImpl implements Kit {
         this.service = service;
 
         this.name = data.name();
-        this.cooldown = data.cooldown();
+        this.cooldown = Duration.ofMinutes(data.cooldownMinutes());
         this.price = data.price();
         this.contents = ItemStack.deserializeItemsFromBytes(data.contents());
-        this.cooldownMap = new HashMap<>(data.availability());
+        this.cooldownMap = new HashMap<>();
+
+        for (Map.Entry<UUID, String> entry : data.availability().entrySet()) {
+            try {
+                cooldownMap.put(entry.getKey(), Instant.parse(entry.getValue()));
+            } catch (DateTimeParseException e) { /* ignore */ }
+        }
 
         purgeCooldown();
     }
@@ -149,7 +156,14 @@ class KitImpl implements Kit {
 
     public KitData memento() {
         purgeCooldown();
-        byte[] contentsNBT = ItemStack.serializeItemsAsBytes(this.contents);
-        return new KitData(this.name, this.cooldown, this.price, contentsNBT, Map.copyOf(this.cooldownMap));
+
+        Map<UUID, String> parsedCooldownMap = new HashMap<>();
+        for (Map.Entry<UUID, Instant> entry : cooldownMap.entrySet()) {
+            parsedCooldownMap.put(entry.getKey(), entry.getValue().toString());
+        }
+
+        byte[] contentsNBT = ItemStack.serializeItemsAsBytes(contents);
+
+        return new KitData(name, cooldown.toMinutes(), price, contentsNBT, parsedCooldownMap);
     }
 }

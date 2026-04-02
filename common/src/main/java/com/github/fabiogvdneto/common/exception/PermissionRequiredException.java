@@ -1,6 +1,6 @@
 package com.github.fabiogvdneto.common.exception;
 
-public class PermissionRequiredException extends CommandExecutionException {
+public class PermissionRequiredException extends Exception {
 
     private final String permission;
 

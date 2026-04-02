@@ -31,7 +31,7 @@ public class KitModule implements KitService, PluginModule {
 
     @Override
     public void load() {
-        if (this.repository != null) {
+        if (repository != null) {
             // Module is already enabled.
             return;
         }
@@ -42,7 +42,7 @@ public class KitModule implements KitService, PluginModule {
 
     @Override
     public void unload() {
-        if (this.repository == null) {
+        if (repository == null) {
             // Module is already disabled.
             return;
         }
@@ -70,12 +70,12 @@ public class KitModule implements KitService, PluginModule {
 
     @Override
     public Collection<Kit> getAll() {
-        return this.cache.values();
+        return cache.values();
     }
 
     @Override
     public Kit get(String name) throws KitNotFoundException {
-        Kit kit = this.cache.get(key(name));
+        Kit kit = cache.get(key(name));
 
         if (kit == null)
             throw new KitNotFoundException(name);
@@ -87,11 +87,11 @@ public class KitModule implements KitService, PluginModule {
     public Kit create(String name) throws KitAlreadyExistsException {
         String key = key(name);
 
-        if (this.cache.get(key) != null)
+        if (cache.get(key) != null)
             throw new KitAlreadyExistsException(name);
 
-        Kit kit = new KitImpl(this.plugin, this, name);
-        this.cache.put(key, kit);
+        Kit kit = new KitImpl(plugin, this, name);
+        cache.put(key, kit);
 
         dirty(key);
         return kit;
@@ -102,7 +102,7 @@ public class KitModule implements KitService, PluginModule {
         // Replace the value by null instead of removing it,
         // so that it can be deleted from the repository later.
         String key = key(name);
-        Kit removed = this.cache.replace(key, null);
+        Kit removed = cache.replace(key, null);
 
         if (removed == null)
             throw new KitNotFoundException(name);
@@ -113,7 +113,7 @@ public class KitModule implements KitService, PluginModule {
 
     @Override
     public boolean exists(String name) {
-        return this.cache.get(key(name)) != null;
+        return cache.get(key(name)) != null;
     }
 
     /* ---- PERSISTENCE ---- */
@@ -123,19 +123,19 @@ public class KitModule implements KitService, PluginModule {
             this.repository = new GsonKitRepository(this.plugin.getDataPath().resolve("kits"));
             this.repository.create();
         } catch (Exception e) {
-            this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying create the kit repository.", e);
+            plugin.getLogger().log(Level.SEVERE, "An error occurred while trying create the kit repository.", e);
         }
     }
 
     private void loadKits() {
         try {
             for (KitData data : this.repository.fetchAll()) {
-                this.cache.put(key(data), new KitImpl(this.plugin, this, data));
+                cache.put(key(data), new KitImpl(plugin, this, data));
             }
 
-            this.plugin.getLogger().info("Loaded " + this.cache.size() + " kits.");
+            plugin.getLogger().info("Loaded " + cache.size() + " kits.");
         } catch (Exception e) {
-            this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to load kits.", e);
+            plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to load kits.", e);
         }
     }
 
@@ -145,15 +145,15 @@ public class KitModule implements KitService, PluginModule {
 
         for (Map.Entry<String, KitData> entry : data.entrySet()) {
             try {
-                this.repository.storeOne(entry.getKey(), entry.getValue());
+                repository.storeOne(entry.getKey(), entry.getValue());
                 successCount++;
             } catch (Exception e) {
-                this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to save a kit.", e);
+                plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to save a kit.", e);
                 errorCount++;
             }
         }
 
-        this.plugin.getLogger().info("Saved " + successCount + " kits with " + errorCount + " errors.");
+        plugin.getLogger().info("Saved " + successCount + " kits with " + errorCount + " errors.");
     }
 
     /**
@@ -163,8 +163,8 @@ public class KitModule implements KitService, PluginModule {
     private Map<String, KitData> dirty() {
         Map<String, KitData> data = new HashMap<>();
 
-        for (String key : this.dirty) {
-            Kit kit = this.cache.get(key);
+        for (String key : dirty) {
+            Kit kit = cache.get(key);
 
             if (kit == null) {
                 // Null values represent data that was removed and must be deleted from the repository.
@@ -175,7 +175,7 @@ public class KitModule implements KitService, PluginModule {
             }
         }
 
-        this.dirty.clear();
+        dirty.clear();
         return data;
     }
 
@@ -184,14 +184,14 @@ public class KitModule implements KitService, PluginModule {
      * @param kit the kit that was modified
      */
     void dirty(String kit) {
-        this.dirty.add(key(kit));
+        dirty.add(key(kit));
 
-        if (this.autosaver == null) {
+        if (autosaver == null) {
             // Wait 10 minutes before saving.
-            this.autosaver = Plugins.sync(this.plugin, () -> {
+            this.autosaver = Plugins.sync(plugin, () -> {
                 this.autosaver = null;
                 Map<String, KitData> data = dirty();
-                Plugins.async(this.plugin, () -> saveKits(data));
+                Plugins.async(plugin, () -> saveKits(data));
             }, 10 * 60 * 20);
         }
     }

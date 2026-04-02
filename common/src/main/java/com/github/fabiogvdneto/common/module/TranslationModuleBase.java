@@ -10,10 +10,9 @@ import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
+import java.util.Optional;
 
 public abstract class TranslationModuleBase implements PluginModule {
 
@@ -21,14 +20,12 @@ public abstract class TranslationModuleBase implements PluginModule {
 
     protected final Plugin plugin;
     protected final Map<String, String> translations;
-    protected final Supplier<String> languageSupplier;
 
-    private String language;
+    protected String language = DEFAULT_LANGUAGE;
 
-    public TranslationModuleBase(Plugin plugin, Supplier<String> languageSupplier) {
+    public TranslationModuleBase(Plugin plugin) {
         this.plugin = Objects.requireNonNull(plugin);
         this.translations = new HashMap<>();
-        this.languageSupplier = Objects.requireNonNull(languageSupplier);
     }
 
     public String getLanguage() {
@@ -43,24 +40,23 @@ public abstract class TranslationModuleBase implements PluginModule {
         }
     }
 
-    private void loadTranslations(String language) {
-        String path = "messages" + File.separatorChar + language + ".yml";
+    private void loadTranslations(String languageCode) {
+        String path = "messages" + File.separatorChar + languageCode + ".yml";
+        loadTranslations(Plugins.loadConfigurationWithDefaults(plugin, path));
 
-        this.loadTranslations(Plugins.loadConfigurationWithDefaults(plugin, path));
-        this.plugin.getLogger().info("Loaded message translations at " + path + ".");
-    }
-
-    private String updateLanguage() {
-        return this.language = languageSupplier.get().toLowerCase(Locale.ROOT);
+        plugin.getLogger().info("Loaded message translations at " + path + ".");
     }
 
     @Override
     public void load() {
-        translations.clear();
+        unload();
         loadTranslations(DEFAULT_LANGUAGE);
 
-        if (!updateLanguage().equals(DEFAULT_LANGUAGE)) {
-            loadTranslations(language);
+        String language = plugin.getConfig().getString("language");
+
+        if (language != null && !language.equals(DEFAULT_LANGUAGE)) {
+            this.loadTranslations(language);
+            this.language = language;
         }
     }
 
@@ -71,39 +67,45 @@ public abstract class TranslationModuleBase implements PluginModule {
 
     /* ---- Audience ---- */
 
-    public Component component(String key) {
-        return MiniMessage.miniMessage().deserialize(translations.get(key));
+    public Optional<Component> component(String key) {
+        return Optional
+                .ofNullable(translations.get(key))
+                .map(MiniMessage.miniMessage()::deserialize);
     }
 
-    public Component component(String key, TagResolver resolver) {
-        return MiniMessage.miniMessage().deserialize(translations.get(key), resolver);
+    public Optional<Component> component(String key, TagResolver resolver) {
+        return Optional
+                .ofNullable(translations.get(key))
+                .map(value -> MiniMessage.miniMessage().deserialize(value, resolver));
     }
 
-    public Component component(String key, TagResolver... resolvers) {
-        return MiniMessage.miniMessage().deserialize(translations.get(key), resolvers);
+    public Optional<Component> component(String key, TagResolver... resolvers) {
+        return Optional
+                .ofNullable(translations.get(key))
+                .map(value -> MiniMessage.miniMessage().deserialize(value, resolvers));
     }
 
     public void message(Audience output, String key) {
-        output.sendMessage(component(key));
+        component(key).ifPresent(output::sendMessage);
     }
 
     public void message(Audience output, String key, TagResolver resolver) {
-        output.sendMessage(component(key, resolver));
+        component(key, resolver).ifPresent(output::sendMessage);
     }
 
     public void message(Audience output, String key, TagResolver... resolvers) {
-        output.sendMessage(component(key, resolvers));
+        component(key, resolvers).ifPresent(output::sendMessage);
     }
 
     public void actionBar(Audience output, String key) {
-        output.sendActionBar(component(key));
+        component(key).ifPresent(output::sendActionBar);
     }
 
     public void actionBar(Audience output, String key, TagResolver resolver) {
-        output.sendActionBar(component(key, resolver));
+        component(key, resolver).ifPresent(output::sendActionBar);
     }
 
     public void actionBar(Audience output, String key, TagResolver... resolvers) {
-        output.sendActionBar(component(key, resolvers));
+        component(key, resolvers).ifPresent(output::sendActionBar);
     }
 }
