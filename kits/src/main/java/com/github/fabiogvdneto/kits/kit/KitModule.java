@@ -120,7 +120,7 @@ public class KitModule implements KitService, PluginModule {
 
     private void createRepository() {
         try {
-            this.repository = new GsonKitRepository(this.plugin.getDataPath().resolve("kits"));
+            this.repository = new GsonKitRepository(plugin);
             this.repository.create();
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "An error occurred while trying create the kit repository.", e);
