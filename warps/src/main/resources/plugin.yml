@@ -32,7 +32,7 @@ permissions:
     default: op
   warps.teleporter.delay.0:
     default: op
-  warps.admin:
+  warps.*:
     description: "Grants advanced permissions for admins."
     default: op
     children:

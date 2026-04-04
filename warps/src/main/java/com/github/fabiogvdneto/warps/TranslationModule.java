@@ -182,6 +182,10 @@ public final class TranslationModule extends TranslationModuleBase {
                 Placeholder.unparsed("limit", Integer.toString(limit)));
     }
 
+    public void homeClosed(Audience target) {
+        message(target, "home.closed");
+    }
+
     /* ---- Spawn ---- */
 
     public void spawnNotFound(Audience target) {

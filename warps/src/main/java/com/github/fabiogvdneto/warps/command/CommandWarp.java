@@ -30,7 +30,9 @@ public class CommandWarp extends CommandHandler<WarpPlugin> {
 
             Warp warp = plugin.getWarps().get(args[0]);
 
-            requirePermission(sender, plugin.getSettings().getWarpPermission(warp.getName()));
+            if (warp.isClosed()) {
+                requirePermission(sender, plugin.getSettings().getWarpPermission(warp.getName()));
+            }
 
             plugin.getTeleporter().teleport((Player) sender, warp.getLocation());
         } catch (PermissionRequiredException e) {

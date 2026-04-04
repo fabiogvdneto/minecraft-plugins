@@ -21,6 +21,10 @@ public class CommandHome extends CommandHandler<WarpPlugin> {
         super(plugin);
     }
 
+    private String adminPermission() {
+        return plugin.getSettings().getAdminPermission();
+    }
+
     @Override
     public void execute(CommandSender sender, Command cmd, String label, String[] args) {
         try {
@@ -34,6 +38,11 @@ public class CommandHome extends CommandHandler<WarpPlugin> {
             plugin.getUsers().fetch(target.getUniqueId()).thenAccept(user -> {
                 try {
                     Home home = user.getHome(args[0]);
+
+                    if (home.isClosed() && player != target && !player.hasPermission(adminPermission())) {
+                        plugin.getMessages().homeClosed(player);
+                        return;
+                    }
 
                     plugin.getTeleporter().teleport(player, home.getLocation());
                 } catch (HomeNotFoundException e) {

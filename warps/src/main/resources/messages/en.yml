@@ -47,8 +47,8 @@ warp:
 home:
   set: "<green>Home set."
   deleted: "<green>Home deleted."
-  already-exists: "<red>Home name already in use."
   not-found: "<red>Home not found."
+  already-exists: "<red>Home name already in use."
   limit-reached: "<red>Home limit reached: <count>/<limit>."
   closed: "<red>That home is closed."
   list:

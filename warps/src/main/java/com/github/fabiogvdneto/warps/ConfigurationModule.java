@@ -12,11 +12,13 @@ import java.util.stream.IntStream;
 
 public final class ConfigurationModule extends ConfigurationModuleBase {
 
+    private static final String PERMISSION_PREFIX = "warps.";
+
     public ConfigurationModule(Plugin plugin) {
         super(plugin);
     }
 
-    /* ---- File Configuration ---- */
+    /* ---- Configuration ---- */
 
     public String getLanguage() {
         return config().getString("lang");
@@ -26,11 +28,11 @@ public final class ConfigurationModule extends ConfigurationModuleBase {
         int max = config().getInt("teleporter.max-delay-seconds");
 
         return IntStream.range(0, max)
-                .filter(i -> perm.hasPermission("warps.teleporter.delay." + i))
+                .filter(i -> perm.hasPermission(getTeleporterDelayPermission(i)))
                 .findFirst().orElse(max);
     }
 
-    public int getTeleportationDelayForTpa(Permissible perm) {
+    public int getTeleportationDelayWithMinimum(Permissible perm) {
         int delay = getTeleportationDelay(perm);
         int min = config().getInt("tpask.min-delay-seconds");
 
@@ -70,10 +72,9 @@ public final class ConfigurationModule extends ConfigurationModuleBase {
     public int getHomeLimit(Permissible perm) {
         int i = config().getInt("homes.max-limit");
 
-        if (perm.hasPermission("warps.homes.limit.*")) return 99;
-        if (perm.hasPermission("warps.homes.limit.max")) return i;
+        if (perm.hasPermission(getHomesLimitPermission())) return 99;
 
-        while (i > 0 && !perm.hasPermission("warps.homes.limit." + i)) i--;
+        while (i > 0 && !perm.hasPermission(getHomesLimitPermission(i))) i--;
 
         return i;
     }
@@ -81,18 +82,30 @@ public final class ConfigurationModule extends ConfigurationModuleBase {
     /* ---- Permissions ---- */
 
     public String getAdminPermission() {
-        return "warps.admin";
+        return PERMISSION_PREFIX + "*";
     }
 
     public String getCommandPermission(Command cmd) {
-        return "warps.command." + cmd.getName();
+        return PERMISSION_PREFIX + "command." + cmd.getName();
     }
 
     public String getCommandPermission(String cmd) {
-        return "warps.command." + cmd;
+        return PERMISSION_PREFIX + "command." + cmd;
     }
 
     public String getWarpPermission(String warpName) {
-        return "warps.warp." + warpName;
+        return PERMISSION_PREFIX + "warp." + warpName;
+    }
+
+    public String getHomesLimitPermission() {
+        return PERMISSION_PREFIX + "homes.limit.*";
+    }
+
+    public String getHomesLimitPermission(int limit) {
+        return PERMISSION_PREFIX + "homes.limit." + limit;
+    }
+
+    public String getTeleporterDelayPermission(int delay) {
+        return PERMISSION_PREFIX + "teleporter.delay." + delay;
     }
 }

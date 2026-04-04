@@ -2,9 +2,15 @@
 language: 'en'
 
 teleporter:
-  # Maximum delay a teleportation may take, in seconds.
-  # This value works together with the permission 'warps.teleporter.delay.<0::max-delay>'.
+  # Maximum delay applied to a teleportation, in seconds.
+  # Used by the permission 'warps.teleporter.delay.<0::max-delay-seconds>'.
   max-delay-seconds: 3
+  # Minimum delay applied to a teleportation, in seconds.
+  #
+  # This allows every player to be able to cancel the teleportation
+  # if they don't want to be teleported at the moment the request was
+  # accepted.
+  min-delay-seconds: 2
   # If false, ongoing teleportations will be cancelled if movement is detected.
   movement-allowed: false
   # If false, ongoing teleportations will be cancelled if damage is detected.
@@ -30,7 +36,3 @@ users:
 tpask:
   # Duration in seconds until a teleportation request expires.
   duration-seconds: 75
-  # Minimum delay a teleportation may take, in seconds.
-  # This allows every player to cancel the teleportation if they don't want
-  # to teleport at the moment the request was accepted.
-  min-delay-seconds: 2
