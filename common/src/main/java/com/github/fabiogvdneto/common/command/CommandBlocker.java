@@ -24,7 +24,7 @@ public class CommandBlocker implements Listener {
     private Predicate<String> commandFilter;
 
     public CommandBlocker(Set<UUID> playerFilter) {
-        this(playerFilter, _ -> true);
+        this(playerFilter, cmd -> true);
     }
 
     public CommandBlocker(Set<UUID> playerFilter, Predicate<String> commandFilter) {

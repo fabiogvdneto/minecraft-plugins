@@ -106,7 +106,7 @@ public class TeleportationModule implements TeleportationService, PluginModule {
                 commandFilter = cmd -> !list.contains(cmd);
                 break;
             case "false": // Block all commands.
-                commandFilter = _ -> true;
+                commandFilter = cmd -> true;
                 break;
             default: // Unknown value. All commands will be allowed.
                 disableCommandBlocker();

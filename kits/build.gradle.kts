@@ -12,5 +12,13 @@ dependencies {
 }
 
 tasks.shadowJar {
+    // Avoid package conflicts between plugins.
     relocate("com.github.fabiogvdneto.common", "com.github.fabiogvdneto.kits.common")
+
+    // Remove "-all" suffix from the output file.
+    archiveClassifier.set("")
+
+    // Change the output directory by using this property:
+    // -Pout=/your/custom/path
+    project.findProperty("out")?.let { destinationDirectory.set(file(it)) }
 }
