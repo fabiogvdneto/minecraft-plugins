@@ -19,17 +19,19 @@ permissions:
     default: op
   kits.command.deletekit:
     default: op
-  kits.command.*:
+  kits.kit.*:
     default: op
+  kits.basics:
+    description: "Grants basic permissions for everyone."
+    default: not op
     children:
       kits.command.kit: true
       kits.command.kits: true
-      kits.command.createkit: true
-      kits.command.deletekit: true
-  kits.*:
+  kits.admin:
+    description: "Grants admin permissions."
     default: op
     children:
-      kits.command.kit: true
-      kits.command.kits: true
+      kits.basics: true
       kits.command.createkit: true
       kits.command.deletekit: true
+      kits.kit.*: true

@@ -51,6 +51,7 @@ other players can visit their homes or not.
 | Name                             | Description                                             |
 |----------------------------------|---------------------------------------------------------|
 | warps.admin                      | All permissions.                                        |
+| warps.basics                     | Basic permissions.                                      |
 | warps.command.setwarp            | Allow to execute /setwarp.                              |
 | warps.command.delwarp            | Allow to execute /delwarp.                              |
 | warps.command.delhome.others     | Allow to execute /delhome to other players.             |
@@ -59,4 +60,5 @@ other players can visit their homes or not.
 | warps.command.tphere             | Allow to execute /tphere.                               |
 | warps.warp.<name>                | Allow to teleport to <name> even if the warp is closed. |
 | warps.homes.limit.<number>       | Allow to create a maximum of <number> homes.            |
+| warps.homes.limit.*              | Allow to create unlimited homes.                        |
 | warps.teleporter.delay.<seconds> | Wait <seconds> before actually teleporting.             |

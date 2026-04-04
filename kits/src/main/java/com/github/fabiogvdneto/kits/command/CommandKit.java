@@ -32,25 +32,24 @@ public class CommandKit extends CommandHandler<KitPlugin> {
 
             Kit kit = plugin.getKits().get(args[0]);
 
-            requirePermission(sender, plugin.getSettings().getKitPermission(kit.getName()));
+            if (!sender.hasPermission(plugin.getSettings().getKitPermission())) {
+                requirePermission(sender, plugin.getSettings().getKitPermission(kit.getName()));
+            }
 
-            boolean checkCooldown = sender.hasPermission(plugin.getSettings().getCooldownBypassPermission());
-            boolean checkPrice = sender.hasPermission(plugin.getSettings().getPriceBypassPermission());
+            boolean useCooldown = !sender.hasPermission(plugin.getSettings().getCooldownBypassPermission());
+            boolean usePrice = !sender.hasPermission(plugin.getSettings().getPriceBypassPermission());
 
             // TODO: check price
 
             Player player = (Player) sender;
             UUID playerID = player.getUniqueId();
 
-            if (checkCooldown) {
+            if (useCooldown) {
                 kit.checkCooldown(playerID);
             }
 
             kit.collect(player.getInventory());
-
-            if (checkCooldown) {
-                kit.applyCooldown(playerID);
-            }
+            kit.applyCooldown(playerID);
 
             plugin.getMessages().kitRedeemed(sender, kit.getName());
         } catch (PermissionRequiredException e) {
@@ -59,8 +58,7 @@ public class CommandKit extends CommandHandler<KitPlugin> {
             plugin.getMessages().commandPlayersOnly(sender);
         } catch (CommandArgumentException e) {
             plugin.getMessages().commandUsageKit(sender);
-
-            // TODO: list all kits available.
+            plugin.getServer().dispatchCommand(sender, "kits");
         } catch (KitNotFoundException e) {
             plugin.getMessages().kitNotFound(sender, args[0]);
         } catch (KitCooldownException e) {

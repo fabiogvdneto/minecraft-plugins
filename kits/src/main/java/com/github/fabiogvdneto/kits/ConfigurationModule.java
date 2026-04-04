@@ -32,7 +32,11 @@ public class ConfigurationModule extends ConfigurationModuleBase {
         return "kits.command." + cmd.toLowerCase();
     }
 
+    public String getKitPermission() {
+        return "kits.kit.*";
+    }
+
     public String getKitPermission(String kitName) {
-        return "kits.redeem." + kitName.toLowerCase();
+        return "kits.kit." + kitName.toLowerCase();
     }
 }

@@ -24,11 +24,14 @@ server administrators to create kits that can be redeemed by regular players.
 
 ### Permissions
 
-| Name                   | Description                     |
-|------------------------|---------------------------------|
-| kits.admin             | Grant all advanced permissions. |
-| kits.command.kit       | Execute `/kit`.                 |
-| kits.command.kits      | Execute `/kits`.                |
-| kits.command.createkit | Execute `/createkit`.           |
-| kits.command.deletekit | Execute `/deletekit`.           |
-| kits.kit.<name>        | Redeem kit <name>.              |
+| Name                   | Description           |
+|------------------------|-----------------------|
+| kits.admin             | Advanced permissions. |
+| kits.basics            | Basic permissions.    |
+| kits.command.kit       | Execute `/kit`.       |
+| kits.command.kits      | Execute `/kits`.      |
+| kits.command.createkit | Execute `/createkit`. |
+| kits.command.deletekit | Execute `/deletekit`. |
+| kits.kit.*             | All kits.             |
+| kits.kit.<name>        | Redeem kit <name>.    |
+| kits.bypass.cooldown   | Ignore kit cooldown.  |

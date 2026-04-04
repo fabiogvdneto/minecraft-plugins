@@ -59,45 +59,45 @@ class KitImpl implements Kit {
 
     @Override
     public String getName() {
-        return this.name;
+        return name;
     }
 
     @Override
     public ItemStack[] getContents() {
-        return this.contents;
+        return contents;
     }
 
     @Override
     public void setContents(ItemStack[] contents) {
         this.contents = Objects.requireNonNull(contents);
-        this.service.dirty(this.name);
+        this.service.dirty(name);
     }
 
     @Override
     public long getPrice() {
-        return this.price;
+        return price;
     }
 
     @Override
     public void setPrice(long price) {
         this.price = Math.max(0, price);
-        this.service.dirty(this.name);
+        this.service.dirty(name);
     }
 
     @Override
     public Duration getCooldownDuration() {
-        return this.cooldown;
+        return cooldown;
     }
 
     @Override
     public void setCooldownDuration(Duration cooldown) {
         this.cooldown = Objects.requireNonNull(cooldown);
-        this.service.dirty(this.name);
+        this.service.dirty(name);
     }
 
     @Override
     public Instant probeCooldown(UUID recipient) {
-        return this.cooldownMap.computeIfPresent(recipient,
+        return cooldownMap.computeIfPresent(recipient,
                 // Remove cooldown if it has already ended.
                 (key, value) -> Instant.now().isBefore(value) ? value : null);
     }
@@ -112,25 +112,25 @@ class KitImpl implements Kit {
 
     @Override
     public void applyCooldown(UUID recipient) {
-        this.cooldownMap.put(recipient, Instant.now().plus(this.cooldown));
-        this.service.dirty(this.name);
+        cooldownMap.put(recipient, Instant.now().plus(cooldown));
+        service.dirty(name);
     }
 
     @Override
     public void clearCooldown(UUID recipient) {
-        this.cooldownMap.remove(recipient);
-        this.service.dirty(this.name);
+        cooldownMap.remove(recipient);
+        service.dirty(name);
     }
 
     @Override
     public void collect(Inventory recipient) throws InventoryFullException {
         int[] freeSlots = findFreeSlots(recipient);
 
-        if (freeSlots.length < this.contents.length)
-            throw new InventoryFullException(this.contents.length, freeSlots.length);
+        if (freeSlots.length < contents.length)
+            throw new InventoryFullException(contents.length, freeSlots.length);
 
-        for (int i = 0; i < this.contents.length; i++) {
-            recipient.setItem(freeSlots[i], this.contents[i]);
+        for (int i = 0; i < contents.length; i++) {
+            recipient.setItem(freeSlots[i], contents[i]);
         }
     }
 
