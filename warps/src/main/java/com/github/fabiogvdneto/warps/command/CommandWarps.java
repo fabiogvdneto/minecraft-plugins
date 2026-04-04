@@ -15,14 +15,22 @@ public class CommandWarps extends CommandHandler<WarpPlugin> {
         super(plugin);
     }
 
+    private String warpPermission(String warpName) {
+        return plugin.getSettings().getWarpPermission(warpName);
+    }
+
+    private boolean hasPermission(CommandSender sender, Warp warp) {
+        return !warp.isClosed() || sender.hasPermission(warpPermission(warp.getName()));
+    }
+
     @Override
     public void execute(CommandSender sender, Command cmd, String label, String[] args) {
         try {
             requirePermission(sender, plugin.getSettings().getCommandPermission(cmd));
 
             Collection<String> warps = plugin.getWarps().getAll().stream()
+                    .filter(warp -> hasPermission(sender, warp))
                     .map(Warp::getName)
-                    .filter(warpName -> sender.hasPermission(plugin.getSettings().getWarpPermission(warpName)))
                     .toList();
 
             plugin.getMessages().warpList(sender, warps);
