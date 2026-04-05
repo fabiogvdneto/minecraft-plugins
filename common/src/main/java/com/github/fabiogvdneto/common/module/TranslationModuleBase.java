@@ -32,12 +32,22 @@ public abstract class TranslationModuleBase implements PluginModule {
         return language;
     }
 
-    private void loadTranslations(Configuration config) {
-        for (Map.Entry<String, Object> entry : config.getValues(true).entrySet()) {
+    private void loadTranslations(Map<String, Object> values) {
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
             if (entry.getValue().getClass() == String.class) {
                 translations.put(entry.getKey(), (String) entry.getValue());
             }
         }
+    }
+
+    private void loadTranslations(Configuration config) {
+        Configuration defaults = config.getDefaults();
+
+        if (defaults != null) {
+            loadTranslations(defaults.getValues(true));
+        }
+
+        loadTranslations(config.getValues(true));
     }
 
     private void loadTranslations(String languageCode) {
