@@ -16,12 +16,8 @@ public class ConfigurationModule extends ConfigurationModuleBase {
 
     /* ---- Permissions ---- */
 
-    public String getCooldownBypassPermission() {
-        return "kits.bypass.cooldown";
-    }
-
-    public String getPriceBypassPermission() {
-        return "kits.bypass.price";
+    public String getAdminPermission() {
+        return "kits.admin";
     }
 
     public String getCommandPermission(Command cmd) {

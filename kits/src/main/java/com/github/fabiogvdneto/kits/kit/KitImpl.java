@@ -11,10 +11,7 @@ import org.bukkit.inventory.ItemStack;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.IntStream;
 
 class KitImpl implements Kit {
@@ -22,11 +19,12 @@ class KitImpl implements Kit {
     private final KitPlugin plugin;
     private final KitModule service;
 
-    private final Map<UUID, Instant> cooldownMap;
     private final String name;
     private Duration cooldown;
     private long price;
     private ItemStack[] contents;
+
+    private final Map<UUID, Instant> recipients;
 
     KitImpl(KitPlugin plugin, KitModule service, String name) {
         this.plugin = plugin;
@@ -35,7 +33,7 @@ class KitImpl implements Kit {
         this.name = Objects.requireNonNull(name);
         this.cooldown = Duration.ZERO;
         this.contents = new ItemStack[0];
-        this.cooldownMap = new HashMap<>();
+        this.recipients = new HashMap<>();
     }
 
     KitImpl(KitPlugin plugin, KitModule service, KitData data) {
@@ -45,16 +43,27 @@ class KitImpl implements Kit {
         this.name = data.name();
         this.cooldown = Duration.ofMinutes(data.cooldownMinutes());
         this.price = data.price();
-        this.contents = ItemStack.deserializeItemsFromBytes(data.contents());
-        this.cooldownMap = new HashMap<>();
+        this.contents = deserializeContents(data.contents());
+        this.recipients = deserializeRecipients(data.recipients());
 
-        for (Map.Entry<UUID, String> entry : data.availability().entrySet()) {
+        purgeCooldown();
+    }
+
+    private ItemStack[] deserializeContents(String contents) {
+        byte[] bytes = Base64.getDecoder().decode(contents);
+        return ItemStack.deserializeItemsFromBytes(bytes);
+    }
+
+    private Map<UUID, Instant> deserializeRecipients(Map<UUID, String> recipients) {
+        Map<UUID, Instant> map = new HashMap<>();
+
+        for (Map.Entry<UUID, String> entry : recipients.entrySet()) {
             try {
-                cooldownMap.put(entry.getKey(), Instant.parse(entry.getValue()));
+                map.put(entry.getKey(), Instant.parse(entry.getValue()));
             } catch (DateTimeParseException e) { /* ignore */ }
         }
 
-        purgeCooldown();
+        return map;
     }
 
     @Override
@@ -97,7 +106,7 @@ class KitImpl implements Kit {
 
     @Override
     public Instant probeCooldown(UUID recipient) {
-        return cooldownMap.computeIfPresent(recipient,
+        return recipients.computeIfPresent(recipient,
                 // Remove cooldown if it has already ended.
                 (key, value) -> Instant.now().isBefore(value) ? value : null);
     }
@@ -112,13 +121,13 @@ class KitImpl implements Kit {
 
     @Override
     public void applyCooldown(UUID recipient) {
-        cooldownMap.put(recipient, Instant.now().plus(cooldown));
+        recipients.put(recipient, Instant.now().plus(cooldown));
         service.dirty(name);
     }
 
     @Override
     public void clearCooldown(UUID recipient) {
-        cooldownMap.remove(recipient);
+        recipients.remove(recipient);
         service.dirty(name);
     }
 
@@ -151,19 +160,28 @@ class KitImpl implements Kit {
     }
 
     public void purgeCooldown() {
-        this.cooldownMap.values().removeIf(Instant.now()::isAfter);
+        this.recipients.values().removeIf(Instant.now()::isAfter);
+    }
+
+    /* ---- Serialization ---- */
+
+    private String serializeContents() {
+        byte[] nbt = ItemStack.serializeItemsAsBytes(contents);
+        return Base64.getEncoder().encodeToString(nbt);
+    }
+
+    private Map<UUID, String> serializeRecipients() {
+        Map<UUID, String> serializedRecipients = new HashMap<>();
+
+        for (Map.Entry<UUID, Instant> entry : recipients.entrySet()) {
+            serializedRecipients.put(entry.getKey(), entry.getValue().toString());
+        }
+
+        return serializedRecipients;
     }
 
     public KitData memento() {
         purgeCooldown();
-
-        Map<UUID, String> parsedCooldownMap = new HashMap<>();
-        for (Map.Entry<UUID, Instant> entry : cooldownMap.entrySet()) {
-            parsedCooldownMap.put(entry.getKey(), entry.getValue().toString());
-        }
-
-        byte[] contentsNBT = ItemStack.serializeItemsAsBytes(contents);
-
-        return new KitData(name, cooldown.toMinutes(), price, contentsNBT, parsedCooldownMap);
+        return new KitData(name, cooldown.toMinutes(), price, serializeContents(), serializeRecipients());
     }
 }

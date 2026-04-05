@@ -8,6 +8,6 @@ public record KitData(
         String name,
         long cooldownMinutes,
         long price,
-        byte[] contents,
-        Map<UUID, String> availability
+        String contents,
+        Map<UUID, String> recipients
 ) implements Serializable { }

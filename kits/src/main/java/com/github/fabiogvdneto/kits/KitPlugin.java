@@ -30,10 +30,10 @@ public class KitPlugin extends JavaPlugin {
     }
 
     private void registerCommands() {
+        new CommandKit(this).register("kit");
+        new CommandKits(this).register("kits");
         new CommandCreatekit(this).register("createkit");
         new CommandDeletekit(this).register("deletekit");
-        new CommandKits(this).register("kits");
-        new CommandKit(this).register("kit");
     }
 
     public ConfigurationModule getSettings() {

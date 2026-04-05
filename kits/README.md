@@ -6,12 +6,13 @@ server administrators to create kits that can be redeemed by regular players.
 ### Features
 
 * Create a kit with your inventory's items.
-* No need to touch configuration files or GUIs.
+* Apply cooldown to kits.
+* Collect kit on first join.
 
 ### Future Work
 
-* Kit cooldown.
 * Kit price.
+* Execute commands before and after the kit is received.
 
 ### Commands
 
@@ -34,4 +35,9 @@ server administrators to create kits that can be redeemed by regular players.
 | kits.command.deletekit | Execute `/deletekit`. |
 | kits.kit.*             | All kits.             |
 | kits.kit.<name>        | Redeem kit <name>.    |
-| kits.bypass.cooldown   | Ignore kit cooldown.  |
+
+* kits.admin
+  * Access to all commands.
+  * Access to all kits.
+  * Bypass kit cooldown.
+  * Bypass kit limits.

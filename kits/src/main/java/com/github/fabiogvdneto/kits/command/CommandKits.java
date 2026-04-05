@@ -6,6 +6,7 @@ import com.github.fabiogvdneto.kits.KitPlugin;
 import com.github.fabiogvdneto.kits.kit.Kit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.permissions.Permissible;
 
 import java.util.Collection;
 
@@ -15,8 +16,16 @@ public class CommandKits extends CommandHandler<KitPlugin> {
         super(plugin);
     }
 
+    private String kitPermission() {
+        return plugin.getSettings().getKitPermission();
+    }
+
     private String kitPermission(String kitName) {
         return plugin.getSettings().getKitPermission(kitName);
+    }
+
+    private boolean hasKitPermission(Permissible permissible, String kitName) {
+        return permissible.hasPermission(kitPermission(kitName)) || permissible.hasPermission(kitPermission());
     }
 
     @Override
@@ -25,7 +34,7 @@ public class CommandKits extends CommandHandler<KitPlugin> {
             requirePermission(sender, plugin.getSettings().getCommandPermission(cmd));
 
             Collection<String> kits = plugin.getKits().getAll().stream().map(Kit::getName)
-                    .filter(kitName -> sender.hasPermission(kitPermission(kitName)))
+                    .filter(kitName -> hasKitPermission(sender, kitName))
                     .toList();
 
             plugin.getMessages().kitList(sender, kits);

@@ -1,6 +1,7 @@
-name: "CursedKits"
-main: "com.github.fabiogvdneto.kits.KitPlugin"
+main: com.github.fabiogvdneto.kits.KitPlugin
+name: CursedKits
 version: "0.1"
+api-version: "1.21"
 commands:
   kit:
     description: "Claim a kit."

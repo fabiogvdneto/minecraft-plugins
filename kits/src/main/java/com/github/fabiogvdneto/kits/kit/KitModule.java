@@ -52,7 +52,7 @@ public class KitModule implements KitService, PluginModule {
             this.autosaver = null;
         }
 
-        saveKits(dirty());
+        saveKits(serialize());
 
         this.cache.clear();
         this.repository = null;
@@ -99,10 +99,8 @@ public class KitModule implements KitService, PluginModule {
 
     @Override
     public Kit delete(String name) throws KitNotFoundException {
-        // Replace the value by null instead of removing it,
-        // so that it can be deleted from the repository later.
         String key = key(name);
-        Kit removed = cache.replace(key, null);
+        Kit removed = cache.remove(key);
 
         if (removed == null)
             throw new KitNotFoundException(name);
@@ -125,6 +123,41 @@ public class KitModule implements KitService, PluginModule {
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "An error occurred while trying create the kit repository.", e);
         }
+    }
+
+    /**
+     * Mark this kit as dirty so that it can be saved on the next batch.
+     * @param kit the kit that was modified
+     */
+    void dirty(String kit) {
+        dirty.add(key(kit));
+
+        if (autosaver == null) {
+            // Wait 10 minutes before saving.
+            this.autosaver = Plugins.sync(plugin, () -> {
+                this.autosaver = null;
+                Map<String, KitData> data = serialize();
+                Plugins.async(plugin, () -> saveKits(data));
+            }, 10 * 60 * 20);
+        }
+    }
+
+    /**
+     * Collect all data marked as dirty.
+     * @return current snapshot of all kits marked as dirty
+     */
+    private Map<String, KitData> serialize() {
+        Map<String, KitData> data = new HashMap<>();
+
+        for (String key : dirty) {
+            Kit kit = cache.get(key);
+
+            // Null values represent data that was removed and must be deleted from the repository.
+            data.put(key, (kit == null) ? null : ((KitImpl) kit).memento());
+        }
+
+        dirty.clear();
+        return data;
     }
 
     private void loadKits() {
@@ -154,45 +187,5 @@ public class KitModule implements KitService, PluginModule {
         }
 
         plugin.getLogger().info("Saved " + successCount + " kits with " + errorCount + " errors.");
-    }
-
-    /**
-     * Collect all data marked as dirty.
-     * @return current snapshot of all kits marked as dirty
-     */
-    private Map<String, KitData> dirty() {
-        Map<String, KitData> data = new HashMap<>();
-
-        for (String key : dirty) {
-            Kit kit = cache.get(key);
-
-            if (kit == null) {
-                // Null values represent data that was removed and must be deleted from the repository.
-                data.put(key, null);
-            } else {
-                // The remaining values must be stored in the repository.
-                data.put(key, ((KitImpl) kit).memento());
-            }
-        }
-
-        dirty.clear();
-        return data;
-    }
-
-    /**
-     * Mark this kit as dirty so that it can be saved on the next batch.
-     * @param kit the kit that was modified
-     */
-    void dirty(String kit) {
-        dirty.add(key(kit));
-
-        if (autosaver == null) {
-            // Wait 10 minutes before saving.
-            this.autosaver = Plugins.sync(plugin, () -> {
-                this.autosaver = null;
-                Map<String, KitData> data = dirty();
-                Plugins.async(plugin, () -> saveKits(data));
-            }, 10 * 60 * 20);
-        }
     }
 }

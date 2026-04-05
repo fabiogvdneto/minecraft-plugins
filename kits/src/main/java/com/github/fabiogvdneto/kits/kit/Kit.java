@@ -53,14 +53,14 @@ public interface Kit {
     void clearCooldown(UUID recipient);
 
     /**
-     * Collect the kit immediately without waiting for the cooldown to finish.
+     * Collect the kit immediately bypassing all requirements.
      * @param target where to add the content of the kit
      * @throws InventoryFullException if the inventory has not enough space
      */
     void collect(Inventory target) throws InventoryFullException;
 
     /**
-     * Redeem the kit if no cooldown is set.
+     * Redeem the kit.
      * @param recipient who is redeeming the kit
      * @throws KitCooldownException if the cooldown is active
      * @throws InventoryFullException if the player's inventory has not enough space

@@ -12,8 +12,7 @@ Each plugin lives in its own subfolder.
   create their own homes and send teleportation requests to other players.
 * **CursedKits** [[more]](https://github.com/fabiogvdneto/minecraft-plugins/tree/main/kits) \
   A kit plugin, as simple as it should be. Create kits for your players with ease without 
-  having to touch configuration files or GUIs. It supports every item you can imagine,
-  without loosing specificity. From enchantments to NBT tags, everything is supported.
+  having to touch configuration files or GUIs.
 
 ## Getting Started
 

@@ -15,7 +15,6 @@ import org.bukkit.entity.Player;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 public class CommandKit extends CommandHandler<KitPlugin> {
 
@@ -36,20 +35,17 @@ public class CommandKit extends CommandHandler<KitPlugin> {
                 requirePermission(sender, plugin.getSettings().getKitPermission(kit.getName()));
             }
 
-            boolean useCooldown = !sender.hasPermission(plugin.getSettings().getCooldownBypassPermission());
-            boolean usePrice = !sender.hasPermission(plugin.getSettings().getPriceBypassPermission());
+            boolean admin = sender.hasPermission(plugin.getSettings().getAdminPermission());
 
             // TODO: check price
 
             Player player = (Player) sender;
-            UUID playerID = player.getUniqueId();
 
-            if (useCooldown) {
-                kit.checkCooldown(playerID);
+            if (admin) {
+                kit.collect(player.getInventory());
+            } else {
+                kit.redeem(player);
             }
-
-            kit.collect(player.getInventory());
-            kit.applyCooldown(playerID);
 
             plugin.getMessages().kitRedeemed(sender, kit.getName());
         } catch (PermissionRequiredException e) {
