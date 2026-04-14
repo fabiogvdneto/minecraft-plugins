@@ -3,8 +3,11 @@ package com.github.fabiogvdneto.kits;
 import com.github.fabiogvdneto.common.module.TranslationModuleBase;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 public final class TranslationModule extends TranslationModuleBase {
@@ -73,14 +76,20 @@ public final class TranslationModule extends TranslationModuleBase {
         message(target, "kit.list.empty");
     }
 
-    public void kitList(Audience target, Collection<String> kits) {
+    public void kitList(Audience target, Collection<String> kits, int cooldownCount) {
         if (kits.isEmpty()) {
             kitListEmpty(target);
             return;
         }
 
+        // Add strikethrough to kits in cooldown.
+        TextComponent[] kitsComp = kits.stream().map(Component::text).toArray(TextComponent[]::new);
+        for (int i = 0; i < cooldownCount; i++) {
+            kitsComp[i] = kitsComp[i].decorate(TextDecoration.STRIKETHROUGH);
+        }
+
         Component separator = component("kit.list.separator").orElse(Component.empty());
-        Component list = kits.stream().map(Component::text).collect(Component.toComponent(separator));
+        Component list = Arrays.stream(kitsComp).collect(Component.toComponent(separator));
 
         message(target, "kit.list.base", Placeholder.component("list", list));
     }

@@ -52,8 +52,7 @@ public class KitModule implements KitService, PluginModule {
             this.autosaver = null;
         }
 
-        saveKits(serialize());
-
+        this.saveKits(serialize());
         this.cache.clear();
         this.repository = null;
     }
@@ -65,7 +64,7 @@ public class KitModule implements KitService, PluginModule {
     }
 
     private String key(KitData data) {
-        return data.name().toLowerCase();
+        return data.id().toLowerCase();
     }
 
     @Override
@@ -132,13 +131,13 @@ public class KitModule implements KitService, PluginModule {
     void dirty(String kit) {
         dirty.add(key(kit));
 
-        if (autosaver == null) {
+        if (this.autosaver == null) {
             // Wait 10 minutes before saving.
             this.autosaver = Plugins.sync(plugin, () -> {
                 this.autosaver = null;
                 Map<String, KitData> data = serialize();
                 Plugins.async(plugin, () -> saveKits(data));
-            }, 10 * 60 * 20);
+            }, /* minutes */ 10 * /* seconds */ 60 * /* ticks */ 20);
         }
     }
 
@@ -162,7 +161,7 @@ public class KitModule implements KitService, PluginModule {
 
     private void loadKits() {
         try {
-            for (KitData data : this.repository.fetchAll()) {
+            for (KitData data : repository.fetchAll()) {
                 cache.put(key(data), new KitImpl(plugin, this, data));
             }
 

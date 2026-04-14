@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public class PlayerNotFoundException extends RuntimeException {
     public PlayerNotFoundException(String name) {
-        super("could't find a player with the name " + name);
+        super("could't find a player with the id " + name);
     }
 
     public PlayerNotFoundException(UUID uid) {

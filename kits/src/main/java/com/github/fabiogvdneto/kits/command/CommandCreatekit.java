@@ -36,7 +36,7 @@ public class CommandCreatekit extends CommandHandler<KitPlugin> {
                     .toArray(ItemStack[]::new);
 
             kit.setContents(contents);
-            plugin.getMessages().kitCreated(sender, kit.getName());
+            plugin.getMessages().kitCreated(sender, kit.getID());
         } catch (CommandSenderException e) {
             plugin.getMessages().commandPlayersOnly(sender);
         } catch (CommandArgumentException e) {

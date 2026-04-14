@@ -12,7 +12,7 @@ kit:
   inventory-full: "<red>You don't have enough space in your inventory to collect the kit."
   not-found: "<red>Kit <white><name><red> not found."
   already-exists: "<red>Kit <white><name><red> already exists."
-  cooldown: "<red>You have to wait <white><cooldown><red> minutes before redeeming this kit again."
+  cooldown: "<red>You have to wait <white><cooldown><red> minute(s) before redeeming this kit again."
   insufficient-money: "<red>You need <white><cost><red> to buy this kit."
   list:
     empty: '<red>There are no kits available.'

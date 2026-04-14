@@ -22,7 +22,7 @@ public class CommandDeletekit extends CommandHandler<KitPlugin> {
             requireArguments(args, 1);
 
             Kit kit = plugin.getKits().delete(args[0]);
-            plugin.getMessages().kitDeleted(sender, kit.getName());
+            plugin.getMessages().kitDeleted(sender, kit.getID());
         } catch (CommandArgumentException e) {
             plugin.getMessages().commandUsageDeletekit(sender);
         } catch (PermissionRequiredException e) {

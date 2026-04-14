@@ -2,55 +2,64 @@ package com.github.fabiogvdneto.kits.kit;
 
 import com.github.fabiogvdneto.kits.exception.InventoryFullException;
 import com.github.fabiogvdneto.kits.exception.KitCooldownException;
+import com.github.fabiogvdneto.kits.exception.KitRecipientNotFoundException;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.UUID;
 
 public interface Kit {
 
-    String getName();
+    /**
+     *
+     * @return the string that identifies this kit.
+     */
+    String getID();
 
+    /**
+     *
+     * @return the contents of this kit.
+     */
     ItemStack[] getContents();
 
+    /**
+     *
+     * @param contents new contents of this kit.
+     */
     void setContents(ItemStack[] contents);
 
+    /**
+     *
+     * @return the price of this kit.
+     */
     long getPrice();
 
+    /**
+     *
+     * @param price new price of this kit.
+     */
     void setPrice(long price);
 
+    /**
+     *
+     * @return the cooldown duration of this kit.
+     */
     Duration getCooldownDuration();
 
+    /**
+     *
+     * @param cooldown new cooldown duration of this kit.
+     */
     void setCooldownDuration(Duration cooldown);
 
     /**
-     * Returns the instant when the cooldown will end, or null if the cooldown already ended.
-     * @param recipient player requesting the kit
-     * @return cooldown for that player
+     *
+     * @param uid the unique id of the recipient.
+     * @return
      */
-    Instant probeCooldown(UUID recipient);
-
-    /**
-     * Throws an exception if cooldown is still active.
-     * @param recipient player requesting the kit
-     * @throws KitCooldownException if cooldown is still active
-     */
-    void checkCooldown(UUID recipient) throws KitCooldownException;
-
-    /**
-     * Applies the cooldown specified by cooldown duration
-     * @param recipient cooldown owner
-     */
-    void applyCooldown(UUID recipient);
-
-    /**
-     * Clears the cooldown of the given player.
-     * @param recipient cooldown owner
-     */
-    void clearCooldown(UUID recipient);
+    KitRecipient getRecipient(UUID uid) throws KitRecipientNotFoundException;
 
     /**
      * Collect the kit immediately bypassing all requirements.

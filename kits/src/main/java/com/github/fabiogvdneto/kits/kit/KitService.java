@@ -14,28 +14,28 @@ public interface KitService {
     Collection<Kit> getAll();
 
     /**
-     * @param name Kit name.
+     * @param name Kit id.
      * @return The kit.
      */
     Kit get(String name) throws KitNotFoundException;
 
     /**
      * Create a kit.
-     * @param name Kit name.
+     * @param name Kit id.
      * @return The kit that was created.
      */
     Kit create(String name) throws KitAlreadyExistsException;
 
     /**
      * Delete a kit.
-     * @param name Kit name.
+     * @param name Kit id.
      * @return The kit that was deleted.
      */
     Kit delete(String name) throws KitNotFoundException;
 
     /**
      * Check if a given kit exists.
-     * @param name Kit name.
+     * @param name Kit id.
      * @return True if kit exists, false otherwise.
      */
     boolean exists(String name);

@@ -32,7 +32,7 @@ public class CommandKit extends CommandHandler<KitPlugin> {
             Kit kit = plugin.getKits().get(args[0]);
 
             if (!sender.hasPermission(plugin.getSettings().getKitPermission())) {
-                requirePermission(sender, plugin.getSettings().getKitPermission(kit.getName()));
+                requirePermission(sender, plugin.getSettings().getKitPermission(kit.getID()));
             }
 
             boolean admin = sender.hasPermission(plugin.getSettings().getAdminPermission());
@@ -47,7 +47,7 @@ public class CommandKit extends CommandHandler<KitPlugin> {
                 kit.redeem(player);
             }
 
-            plugin.getMessages().kitRedeemed(sender, kit.getName());
+            plugin.getMessages().kitRedeemed(sender, kit.getID());
         } catch (PermissionRequiredException e) {
             plugin.getMessages().permissionRequired(sender);
         } catch (CommandSenderException e) {

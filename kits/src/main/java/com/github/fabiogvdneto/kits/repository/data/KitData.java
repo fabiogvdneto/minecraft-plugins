@@ -1,13 +1,12 @@
 package com.github.fabiogvdneto.kits.repository.data;
 
 import java.io.Serializable;
-import java.util.Map;
-import java.util.UUID;
+import java.util.List;
 
 public record KitData(
-        String name,
+        String id,
         long cooldownMinutes,
         long price,
         String contents,
-        Map<UUID, String> recipients
+        List<KitRecipientData> recipients
 ) implements Serializable { }

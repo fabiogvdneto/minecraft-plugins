@@ -3,7 +3,9 @@ package com.github.fabiogvdneto.kits.kit;
 import com.github.fabiogvdneto.kits.KitPlugin;
 import com.github.fabiogvdneto.kits.exception.InventoryFullException;
 import com.github.fabiogvdneto.kits.exception.KitCooldownException;
+import com.github.fabiogvdneto.kits.exception.KitRecipientNotFoundException;
 import com.github.fabiogvdneto.kits.repository.data.KitData;
+import com.github.fabiogvdneto.kits.repository.data.KitRecipientData;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -19,18 +21,18 @@ class KitImpl implements Kit {
     private final KitPlugin plugin;
     private final KitModule service;
 
-    private final String name;
+    private final String id;
     private Duration cooldown;
     private long price;
     private ItemStack[] contents;
 
-    private final Map<UUID, Instant> recipients;
+    private final Map<UUID, KitRecipient> recipients;
 
-    KitImpl(KitPlugin plugin, KitModule service, String name) {
+    KitImpl(KitPlugin plugin, KitModule service, String id) {
         this.plugin = plugin;
         this.service = service;
 
-        this.name = Objects.requireNonNull(name);
+        this.id = Objects.requireNonNull(id);
         this.cooldown = Duration.ZERO;
         this.contents = new ItemStack[0];
         this.recipients = new HashMap<>();
@@ -40,13 +42,11 @@ class KitImpl implements Kit {
         this.plugin = plugin;
         this.service = service;
 
-        this.name = data.name();
+        this.id = data.id();
         this.cooldown = Duration.ofMinutes(data.cooldownMinutes());
         this.price = data.price();
         this.contents = deserializeContents(data.contents());
         this.recipients = deserializeRecipients(data.recipients());
-
-        purgeCooldown();
     }
 
     private ItemStack[] deserializeContents(String contents) {
@@ -54,12 +54,12 @@ class KitImpl implements Kit {
         return ItemStack.deserializeItemsFromBytes(bytes);
     }
 
-    private Map<UUID, Instant> deserializeRecipients(Map<UUID, String> recipients) {
-        Map<UUID, Instant> map = new HashMap<>();
+    private Map<UUID, KitRecipient> deserializeRecipients(List<KitRecipientData> recipients) {
+        Map<UUID, KitRecipient> map = new HashMap<>();
 
-        for (Map.Entry<UUID, String> entry : recipients.entrySet()) {
+        for (KitRecipientData data : recipients) {
             try {
-                map.put(entry.getKey(), Instant.parse(entry.getValue()));
+                map.put(data.uid(), new KitRecipientImpl(this, data));
             } catch (DateTimeParseException e) { /* ignore */ }
         }
 
@@ -67,8 +67,8 @@ class KitImpl implements Kit {
     }
 
     @Override
-    public String getName() {
-        return name;
+    public String getID() {
+        return id;
     }
 
     @Override
@@ -79,7 +79,7 @@ class KitImpl implements Kit {
     @Override
     public void setContents(ItemStack[] contents) {
         this.contents = Objects.requireNonNull(contents);
-        this.service.dirty(name);
+        this.service.dirty(id);
     }
 
     @Override
@@ -90,7 +90,7 @@ class KitImpl implements Kit {
     @Override
     public void setPrice(long price) {
         this.price = Math.max(0, price);
-        this.service.dirty(name);
+        this.service.dirty(id);
     }
 
     @Override
@@ -101,57 +101,25 @@ class KitImpl implements Kit {
     @Override
     public void setCooldownDuration(Duration cooldown) {
         this.cooldown = Objects.requireNonNull(cooldown);
-        this.service.dirty(name);
+        this.service.dirty(id);
+    }
+
+    private KitRecipient createRecipient(UUID uid) {
+        return recipients.computeIfAbsent(uid, key -> new KitRecipientImpl(this, key));
     }
 
     @Override
-    public Instant probeCooldown(UUID recipient) {
-        return recipients.computeIfPresent(recipient,
-                // Remove cooldown if it has already ended.
-                (key, value) -> Instant.now().isBefore(value) ? value : null);
+    public KitRecipient getRecipient(UUID uid) throws KitRecipientNotFoundException {
+        KitRecipient recipient = recipients.get(uid);
+
+        if (recipient == null)
+            throw new KitRecipientNotFoundException(uid);
+
+        return recipient;
     }
 
-    @Override
-    public void checkCooldown(UUID recipient) throws KitCooldownException {
-        Instant endOfCooldown = probeCooldown(recipient);
-
-        if (endOfCooldown != null)
-            throw new KitCooldownException(endOfCooldown);
-    }
-
-    @Override
-    public void applyCooldown(UUID recipient) {
-        recipients.put(recipient, Instant.now().plus(cooldown));
-        service.dirty(name);
-    }
-
-    @Override
-    public void clearCooldown(UUID recipient) {
-        recipients.remove(recipient);
-        service.dirty(name);
-    }
-
-    @Override
-    public void collect(Inventory recipient) throws InventoryFullException {
-        int[] freeSlots = findFreeSlots(recipient);
-
-        if (freeSlots.length < contents.length)
-            throw new InventoryFullException(contents.length, freeSlots.length);
-
-        for (int i = 0; i < contents.length; i++) {
-            recipient.setItem(freeSlots[i], contents[i]);
-        }
-    }
-
-    @Override
-    public void redeem(Player recipient) throws KitCooldownException, InventoryFullException {
-        checkCooldown(recipient.getUniqueId());
-        collect(recipient.getInventory());
-        applyCooldown(recipient.getUniqueId());
-    }
-
-    private int[] findFreeSlots(Inventory inv) {
-        ItemStack[] storage = inv.getStorageContents();
+    private int[] findEmptySlots(Inventory target) {
+        ItemStack[] storage = target.getStorageContents();
 
         return IntStream.range(0, storage.length)
                 .filter(i -> storage[i] == null || storage[i].isEmpty())
@@ -159,8 +127,42 @@ class KitImpl implements Kit {
                 .toArray();
     }
 
-    public void purgeCooldown() {
-        this.recipients.values().removeIf(Instant.now()::isAfter);
+    @Override
+    public void collect(Inventory target) throws InventoryFullException {
+        int[] emptySlots = findEmptySlots(target);
+
+        if (emptySlots.length < contents.length)
+            throw new InventoryFullException(contents.length, emptySlots.length);
+
+        for (int i = 0; i < contents.length; i++) {
+            target.setItem(emptySlots[i], contents[i]);
+        }
+    }
+
+    private void checkCooldown(KitRecipient recipient) throws KitCooldownException {
+        Instant nextRedeemTime = recipient.getNextRedeemTime();
+
+        if (Instant.now().isBefore(nextRedeemTime))
+            throw new KitCooldownException(nextRedeemTime);
+    }
+
+    private void applyCooldown(KitRecipient recipient) {
+        recipient.setNextRedeemTime(Instant.now().plus(cooldown));
+    }
+
+    @Override
+    public void redeem(Player player) throws KitCooldownException, InventoryFullException {
+        if (player.hasPermission(plugin.getSettings().getAdminPermission())) {
+            collect(player.getInventory());
+            return;
+        }
+
+        KitRecipient recipient = createRecipient(player.getUniqueId());
+
+        checkCooldown(recipient);
+        collect(player.getInventory());
+        applyCooldown(recipient);
+        service.dirty(id);
     }
 
     /* ---- Serialization ---- */
@@ -170,18 +172,14 @@ class KitImpl implements Kit {
         return Base64.getEncoder().encodeToString(nbt);
     }
 
-    private Map<UUID, String> serializeRecipients() {
-        Map<UUID, String> serializedRecipients = new HashMap<>();
-
-        for (Map.Entry<UUID, Instant> entry : recipients.entrySet()) {
-            serializedRecipients.put(entry.getKey(), entry.getValue().toString());
-        }
-
-        return serializedRecipients;
+    private List<KitRecipientData> serializeRecipients() {
+        return recipients.values().stream()
+                .filter(r -> r.getNextRedeemTime().isAfter(Instant.now()))
+                .map(r -> ((KitRecipientImpl) r).memento())
+                .toList();
     }
 
     public KitData memento() {
-        purgeCooldown();
-        return new KitData(name, cooldown.toMinutes(), price, serializeContents(), serializeRecipients());
+        return new KitData(id, cooldown.toMinutes(), price, serializeContents(), serializeRecipients());
     }
 }
