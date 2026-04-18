@@ -5,8 +5,9 @@ import java.util.List;
 
 public record KitData(
         String id,
+        double price,
         long cooldownMinutes,
-        long price,
+        int redeemLimit,
         String contents,
         List<KitRecipientData> recipients
 ) implements Serializable { }

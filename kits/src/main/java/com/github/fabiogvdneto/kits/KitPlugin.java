@@ -6,6 +6,8 @@ import com.github.fabiogvdneto.kits.command.CommandKit;
 import com.github.fabiogvdneto.kits.command.CommandKits;
 import com.github.fabiogvdneto.kits.kit.KitModule;
 import com.github.fabiogvdneto.kits.kit.KitService;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class KitPlugin extends JavaPlugin {
@@ -13,6 +15,8 @@ public class KitPlugin extends JavaPlugin {
     private final ConfigurationModule settings = new ConfigurationModule(this);
     private final TranslationModule messages = new TranslationModule(this);
     private final KitModule kits = new KitModule(this);
+
+    private Economy economy;
 
     @Override
     public void onEnable() {
@@ -36,6 +40,16 @@ public class KitPlugin extends JavaPlugin {
         new CommandDeletekit(this).register("deletekit");
     }
 
+    private void setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            RegisteredServiceProvider<Economy> service = getServer().getServicesManager().getRegistration(Economy.class);
+
+            if (service != null) {
+                this.economy = service.getProvider();
+            }
+        }
+    }
+
     public ConfigurationModule getSettings() {
         return settings;
     }
@@ -46,5 +60,9 @@ public class KitPlugin extends JavaPlugin {
 
     public KitService getKits() {
         return kits;
+    }
+
+    public Economy getEconomy() {
+        return economy;
     }
 }

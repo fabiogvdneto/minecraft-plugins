@@ -9,6 +9,11 @@ version = "0.1"
 dependencies {
     implementation(project(":common"))
     compileOnly(libs.papermc)
+
+    compileOnly(libs.vault) {
+        // Avoid collision with papermc.
+        exclude(group = "org.bukkit", module = "bukkit")
+    }
 }
 
 tasks.shadowJar {

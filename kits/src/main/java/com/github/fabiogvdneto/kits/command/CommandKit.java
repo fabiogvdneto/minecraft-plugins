@@ -7,6 +7,7 @@ import com.github.fabiogvdneto.common.exception.PermissionRequiredException;
 import com.github.fabiogvdneto.kits.KitPlugin;
 import com.github.fabiogvdneto.kits.exception.InventoryFullException;
 import com.github.fabiogvdneto.kits.exception.KitCooldownException;
+import com.github.fabiogvdneto.kits.exception.KitLimitException;
 import com.github.fabiogvdneto.kits.exception.KitNotFoundException;
 import com.github.fabiogvdneto.kits.kit.Kit;
 import org.bukkit.command.Command;
@@ -59,10 +60,12 @@ public class CommandKit extends CommandHandler<KitPlugin> {
             plugin.getMessages().kitNotFound(sender, args[0]);
         } catch (KitCooldownException e) {
             long cooldown = Instant.now().until(e.whenAvailable(), ChronoUnit.MINUTES);
-            plugin.getMessages().kitCooldown(sender, Long.toString(cooldown));
+            plugin.getMessages().kitCooldown(sender, String.valueOf(cooldown));
+        } catch (KitLimitException e) {
+            plugin.getMessages().kitCooldown(sender, String.valueOf(e.getLimit()));
         } catch (InventoryFullException e) {
-            String required = Integer.toString(e.getSpaceRequired());
-            String available = Integer.toString(e.getSpaceAvailable());
+            String required = String.valueOf(e.getSpaceRequired());
+            String available = String.valueOf(e.getSpaceAvailable());
             plugin.getMessages().kitInventoryFull(sender, required, available);
         }
     }

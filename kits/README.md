@@ -5,14 +5,10 @@ server administrators to create kits that can be redeemed by regular players.
 
 ### Features
 
-* Create a kit with your inventory's items.
-* Apply cooldown to kits.
-* Collect kit on first join.
-
-### Future Work
-
-* Kit price.
-* Execute commands before and after the kit is received.
+* Create kits based on the contents of your inventory.
+* Add cooldown to kits.
+* Add price to kits (vault support).
+* Add limit to kits (can only be redeemed x times per player).
 
 ### Commands
 

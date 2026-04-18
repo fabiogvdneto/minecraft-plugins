@@ -65,11 +65,15 @@ public final class TranslationModule extends TranslationModuleBase {
     }
 
     public void kitCooldown(Audience target, String cooldownMinutes) {
-        message(target, "kit.cooldown", Placeholder.unparsed("cooldown", cooldownMinutes));
+        message(target, "kit.error-cooldown", Placeholder.unparsed("cooldown", cooldownMinutes));
     }
 
-    public void kitInsufficientMoney(Audience target, String cost) {
-        message(target, "kit.insufficient-money", Placeholder.unparsed("cost", cost));
+    public void kitLimit(Audience target, String redeemLimit) {
+        message(target, "kit.error-limit", Placeholder.unparsed("limit", redeemLimit));
+    }
+
+    public void kitInsufficientFunds(Audience target, String price) {
+        message(target, "kit.error-insufficient-funds", Placeholder.unparsed("price", price));
     }
 
     public void kitListEmpty(Audience target) {

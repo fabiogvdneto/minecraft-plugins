@@ -5,5 +5,6 @@ import java.util.UUID;
 
 public record KitRecipientData(
         UUID uid,
-        String nextRedeemTime
+        String nextRedeemTime,
+        int redeemCount
 ) implements Serializable { }

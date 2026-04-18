@@ -1,9 +1,7 @@
 package com.github.fabiogvdneto.kits.kit;
 
 import com.github.fabiogvdneto.kits.KitPlugin;
-import com.github.fabiogvdneto.kits.exception.InventoryFullException;
-import com.github.fabiogvdneto.kits.exception.KitCooldownException;
-import com.github.fabiogvdneto.kits.exception.KitRecipientNotFoundException;
+import com.github.fabiogvdneto.kits.exception.*;
 import com.github.fabiogvdneto.kits.repository.data.KitData;
 import com.github.fabiogvdneto.kits.repository.data.KitRecipientData;
 import org.bukkit.entity.Player;
@@ -22,9 +20,11 @@ class KitImpl implements Kit {
     private final KitModule service;
 
     private final String id;
-    private Duration cooldown;
-    private long price;
+
     private ItemStack[] contents;
+    private double price;
+    private Duration cooldown;
+    private int redeemLimit;
 
     private final Map<UUID, KitRecipient> recipients;
 
@@ -33,8 +33,12 @@ class KitImpl implements Kit {
         this.service = service;
 
         this.id = Objects.requireNonNull(id);
-        this.cooldown = Duration.ZERO;
         this.contents = new ItemStack[0];
+
+        this.cooldown = Duration.ZERO;
+        this.redeemLimit = -1;
+        this.price = 0.0;
+
         this.recipients = new HashMap<>();
     }
 
@@ -43,8 +47,11 @@ class KitImpl implements Kit {
         this.service = service;
 
         this.id = data.id();
+
         this.cooldown = Duration.ofMinutes(data.cooldownMinutes());
+        this.redeemLimit = data.redeemLimit();
         this.price = data.price();
+
         this.contents = deserializeContents(data.contents());
         this.recipients = deserializeRecipients(data.recipients());
     }
@@ -72,23 +79,12 @@ class KitImpl implements Kit {
     }
 
     @Override
-    public ItemStack[] getContents() {
-        return contents;
-    }
-
-    @Override
-    public void setContents(ItemStack[] contents) {
-        this.contents = Objects.requireNonNull(contents);
-        this.service.dirty(id);
-    }
-
-    @Override
-    public long getPrice() {
+    public double getPrice() {
         return price;
     }
 
     @Override
-    public void setPrice(long price) {
+    public void setPrice(double price) {
         this.price = Math.max(0, price);
         this.service.dirty(id);
     }
@@ -101,6 +97,28 @@ class KitImpl implements Kit {
     @Override
     public void setCooldownDuration(Duration cooldown) {
         this.cooldown = Objects.requireNonNull(cooldown);
+        this.service.dirty(id);
+    }
+
+    @Override
+    public int getRedeemLimit() {
+        return redeemLimit;
+    }
+
+    @Override
+    public void setRedeemLimit(int redeemLimit) {
+        this.redeemLimit = redeemLimit;
+        this.service.dirty(id);
+    }
+
+    @Override
+    public ItemStack[] getContents() {
+        return contents;
+    }
+
+    @Override
+    public void setContents(ItemStack[] contents) {
+        this.contents = Objects.requireNonNull(contents);
         this.service.dirty(id);
     }
 
@@ -127,6 +145,11 @@ class KitImpl implements Kit {
                 .toArray();
     }
 
+    private void performPayment(Player player) throws PlayerInsufficientFundsException {
+        if (!plugin.getEconomy().withdrawPlayer(player, price).transactionSuccess())
+            throw new PlayerInsufficientFundsException(price);
+    }
+
     @Override
     public void collect(Inventory target) throws InventoryFullException {
         int[] emptySlots = findEmptySlots(target);
@@ -139,29 +162,23 @@ class KitImpl implements Kit {
         }
     }
 
-    private void checkCooldown(KitRecipient recipient) throws KitCooldownException {
-        Instant nextRedeemTime = recipient.getNextRedeemTime();
-
-        if (Instant.now().isBefore(nextRedeemTime))
-            throw new KitCooldownException(nextRedeemTime);
-    }
-
-    private void applyCooldown(KitRecipient recipient) {
-        recipient.setNextRedeemTime(Instant.now().plus(cooldown));
-    }
-
     @Override
-    public void redeem(Player player) throws KitCooldownException, InventoryFullException {
+    public void redeem(Player player) throws KitCooldownException, KitLimitException, InventoryFullException {
         if (player.hasPermission(plugin.getSettings().getAdminPermission())) {
             collect(player.getInventory());
             return;
         }
 
-        KitRecipient recipient = createRecipient(player.getUniqueId());
+        KitRecipientImpl recipient = (KitRecipientImpl) createRecipient(player.getUniqueId());
 
-        checkCooldown(recipient);
+        recipient.checkCooldown();
+        recipient.checkLimit(redeemLimit);
+
+        performPayment(player);
         collect(player.getInventory());
-        applyCooldown(recipient);
+        recipient.applyCooldown(cooldown);
+        recipient.increaseRedeemCount();
+
         service.dirty(id);
     }
 
@@ -180,6 +197,6 @@ class KitImpl implements Kit {
     }
 
     public KitData memento() {
-        return new KitData(id, cooldown.toMinutes(), price, serializeContents(), serializeRecipients());
+        return new KitData(id, price, cooldown.toMinutes(), redeemLimit, serializeContents(), serializeRecipients());
     }
 }

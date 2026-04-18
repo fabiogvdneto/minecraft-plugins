@@ -9,11 +9,12 @@ kit:
   redeemed: "<green>Kit <white><name><green> was redeemed."
   created: "<green>Kit <white><name><green> was created."
   deleted: "<green>Kit <white><name><green> was deleted."
-  inventory-full: "<red>You don't have enough space in your inventory to collect the kit."
   not-found: "<red>Kit <white><name><red> not found."
   already-exists: "<red>Kit <white><name><red> already exists."
-  cooldown: "<red>You have to wait <white><cooldown><red> minute(s) before redeeming this kit again."
-  insufficient-money: "<red>You need <white><cost><red> to buy this kit."
+  inventory-full: "<red>You don't have enough space in your inventory to collect the kit."
+  error-cooldown: "<red>You have to wait <white><cooldown><red> minute(s) before redeeming this kit again."
+  error-limit: "<red>You can't redeem this kit more than <white><limit><red> times."
+  error-insufficient-funds: "<red>You need <white><price><red> to buy this kit."
   list:
     empty: '<red>There are no kits available.'
     base: '<yellow>Kits: <white><list>.'

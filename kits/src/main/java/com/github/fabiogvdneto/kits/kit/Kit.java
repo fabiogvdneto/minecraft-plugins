@@ -32,18 +32,6 @@ public interface Kit {
 
     /**
      *
-     * @return the price of this kit.
-     */
-    long getPrice();
-
-    /**
-     *
-     * @param price new price of this kit.
-     */
-    void setPrice(long price);
-
-    /**
-     *
      * @return the cooldown duration of this kit.
      */
     Duration getCooldownDuration();
@@ -53,6 +41,30 @@ public interface Kit {
      * @param cooldown new cooldown duration of this kit.
      */
     void setCooldownDuration(Duration cooldown);
+
+    /**
+     *
+     * @return the price of this kit.
+     */
+    double getPrice();
+
+    /**
+     *
+     * @param price new price of this kit.
+     */
+    void setPrice(double price);
+
+    /**
+     *
+     * @return the number of times this kit can be redeemed by the same player.
+     */
+    int getRedeemLimit();
+
+    /**
+     *
+     * @param limit new redeem limit.
+     */
+    void setRedeemLimit(int limit);
 
     /**
      *

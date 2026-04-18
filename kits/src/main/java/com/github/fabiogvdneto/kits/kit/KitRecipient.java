@@ -9,6 +9,6 @@ public interface KitRecipient {
 
     Instant getNextRedeemTime();
 
-    void setNextRedeemTime(Instant when);
+    int getRedeemCount();
 
 }
