@@ -6,9 +6,13 @@ import org.bukkit.plugin.Plugin;
 
 public class ConfigurationModule extends ConfigurationModuleBase {
 
+    private final static String PERMISSION_PREFIX = "morekits.";
+
     public ConfigurationModule(Plugin plugin) {
         super(plugin);
     }
+
+    /* ---- Configuration ---- */
 
     public String getLanguage() {
         return config().getString("lang");
@@ -17,22 +21,22 @@ public class ConfigurationModule extends ConfigurationModuleBase {
     /* ---- Permissions ---- */
 
     public String getAdminPermission() {
-        return "kits.admin";
+        return PERMISSION_PREFIX + "admin";
     }
 
     public String getCommandPermission(Command cmd) {
-        return "kits.command." + cmd.getName().toLowerCase();
+        return PERMISSION_PREFIX + "command." + cmd.getName().toLowerCase();
     }
 
     public String getCommandPermission(String cmd) {
-        return "kits.command." + cmd.toLowerCase();
+        return PERMISSION_PREFIX + "command." + cmd.toLowerCase();
     }
 
     public String getKitPermission() {
-        return "kits.kit.*";
+        return PERMISSION_PREFIX + "kit.*";
     }
 
     public String getKitPermission(String kitName) {
-        return "kits.kit." + kitName.toLowerCase();
+        return PERMISSION_PREFIX + "kit." + kitName.toLowerCase();
     }
 }

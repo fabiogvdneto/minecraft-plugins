@@ -3,15 +3,11 @@ package com.github.fabiogvdneto.kits.command;
 import com.github.fabiogvdneto.common.command.CommandHandler;
 import com.github.fabiogvdneto.common.exception.PermissionRequiredException;
 import com.github.fabiogvdneto.kits.KitPlugin;
-import com.github.fabiogvdneto.kits.exception.KitRecipientNotFoundException;
 import com.github.fabiogvdneto.kits.kit.Kit;
-import com.github.fabiogvdneto.kits.kit.KitRecipient;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permissible;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,16 +18,8 @@ public class CommandKits extends CommandHandler<KitPlugin> {
         super(plugin);
     }
 
-    private String kitPermission() {
-        return plugin.getSettings().getKitPermission();
-    }
-
     private String kitPermission(String kitName) {
         return plugin.getSettings().getKitPermission(kitName);
-    }
-
-    private boolean hasKitPermission(Permissible permissible, String kitName) {
-        return permissible.hasPermission(kitPermission(kitName)) || permissible.hasPermission(kitPermission());
     }
 
     @Override
@@ -49,31 +37,26 @@ public class CommandKits extends CommandHandler<KitPlugin> {
             List<String> names;
 
             // Number of kits in cooldown.
-            int cooldownCount = 0;
+            int notRedeemableCount = 0;
 
             if (sender instanceof Player player) {
                 names = new LinkedList<>();
 
                 for (Kit kit : kits) {
-                    if (!hasKitPermission(sender, kit.getID())) continue;
+                    if (!sender.hasPermission(kitPermission(kit.getName()))) continue;
 
-                    try {
-                        KitRecipient recipient = kit.getRecipient(player.getUniqueId());
-
-                        if (recipient.getNextRedeemTime().isAfter(Instant.now())) {
-                            cooldownCount++;
-                            names.addFirst(kit.getID());
-                            continue;
-                        }
-                    } catch (KitRecipientNotFoundException e) { /* ignore */ }
-
-                    names.addLast(kit.getID());
+                    if (kit.isRedeemable(player.getUniqueId())) {
+                        names.addLast(kit.getName());
+                    } else {
+                        names.addFirst(kit.getName());
+                        notRedeemableCount++;
+                    }
                 }
             } else {
-                names = kits.stream().map(Kit::getID).toList();
+                names = kits.stream().map(Kit::getName).toList();
             }
 
-            plugin.getMessages().kitList(sender, names, cooldownCount);
+            plugin.getMessages().kitList(sender, names, notRedeemableCount);
         } catch (PermissionRequiredException e) {
             plugin.getMessages().permissionRequired(sender);
         }

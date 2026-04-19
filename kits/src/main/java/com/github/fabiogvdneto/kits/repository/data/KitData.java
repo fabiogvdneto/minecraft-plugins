@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 public record KitData(
-        String id,
+        String name,
         double price,
         long cooldownMinutes,
         int redeemLimit,

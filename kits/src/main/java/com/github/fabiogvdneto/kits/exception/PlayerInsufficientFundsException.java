@@ -9,7 +9,7 @@ public class PlayerInsufficientFundsException extends RuntimeException {
         this.amountRequired = amountRequired;
     }
 
-    public double getRequired() {
+    public double getAmount() {
         return amountRequired;
     }
 }

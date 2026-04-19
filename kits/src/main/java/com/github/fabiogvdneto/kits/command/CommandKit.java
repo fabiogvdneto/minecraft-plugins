@@ -5,10 +5,7 @@ import com.github.fabiogvdneto.common.exception.CommandArgumentException;
 import com.github.fabiogvdneto.common.exception.CommandSenderException;
 import com.github.fabiogvdneto.common.exception.PermissionRequiredException;
 import com.github.fabiogvdneto.kits.KitPlugin;
-import com.github.fabiogvdneto.kits.exception.InventoryFullException;
-import com.github.fabiogvdneto.kits.exception.KitCooldownException;
-import com.github.fabiogvdneto.kits.exception.KitLimitException;
-import com.github.fabiogvdneto.kits.exception.KitNotFoundException;
+import com.github.fabiogvdneto.kits.exception.*;
 import com.github.fabiogvdneto.kits.kit.Kit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -32,23 +29,15 @@ public class CommandKit extends CommandHandler<KitPlugin> {
 
             Kit kit = plugin.getKits().get(args[0]);
 
-            if (!sender.hasPermission(plugin.getSettings().getKitPermission())) {
-                requirePermission(sender, plugin.getSettings().getKitPermission(kit.getID()));
-            }
+            requirePermission(sender, plugin.getSettings().getKitPermission(kit.getName()));
 
-            boolean admin = sender.hasPermission(plugin.getSettings().getAdminPermission());
-
-            // TODO: check price
-
-            Player player = (Player) sender;
-
-            if (admin) {
-                kit.collect(player.getInventory());
+            if (sender.hasPermission(plugin.getSettings().getAdminPermission())) {
+                kit.collect(((Player) sender).getInventory());
             } else {
-                kit.redeem(player);
+                kit.redeem((Player) sender);
             }
 
-            plugin.getMessages().kitRedeemed(sender, kit.getID());
+            plugin.getMessages().kitRedeemed(sender, kit.getName());
         } catch (PermissionRequiredException e) {
             plugin.getMessages().permissionRequired(sender);
         } catch (CommandSenderException e) {
@@ -62,7 +51,9 @@ public class CommandKit extends CommandHandler<KitPlugin> {
             long cooldown = Instant.now().until(e.whenAvailable(), ChronoUnit.MINUTES);
             plugin.getMessages().kitCooldown(sender, String.valueOf(cooldown));
         } catch (KitLimitException e) {
-            plugin.getMessages().kitCooldown(sender, String.valueOf(e.getLimit()));
+            plugin.getMessages().kitLimit(sender, String.valueOf(e.getLimit()));
+        } catch (PlayerInsufficientFundsException e) {
+            plugin.getMessages().kitInsufficientFunds(sender, String.valueOf(e.getAmount()));
         } catch (InventoryFullException e) {
             String required = String.valueOf(e.getSpaceRequired());
             String available = String.valueOf(e.getSpaceAvailable());

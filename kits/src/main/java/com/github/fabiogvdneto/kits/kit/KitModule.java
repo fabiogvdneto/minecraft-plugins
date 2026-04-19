@@ -13,7 +13,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 import java.util.logging.Level;
 
-public class KitModule implements KitService, PluginModule {
+public class KitModule implements PluginModule {
 
     private final KitPlugin plugin;
 
@@ -59,22 +59,12 @@ public class KitModule implements KitService, PluginModule {
 
     /* ---- MANAGER ---- */
 
-    private String key(String name) {
-        return name.toLowerCase();
-    }
-
-    private String key(KitData data) {
-        return data.id().toLowerCase();
-    }
-
-    @Override
     public Collection<Kit> getAll() {
         return cache.values();
     }
 
-    @Override
     public Kit get(String name) throws KitNotFoundException {
-        Kit kit = cache.get(key(name));
+        Kit kit = cache.get(name.toLowerCase());
 
         if (kit == null)
             throw new KitNotFoundException(name);
@@ -82,23 +72,21 @@ public class KitModule implements KitService, PluginModule {
         return kit;
     }
 
-    @Override
     public Kit create(String name) throws KitAlreadyExistsException {
-        String key = key(name);
+        String key = name.toLowerCase();
 
         if (cache.get(key) != null)
             throw new KitAlreadyExistsException(name);
 
-        Kit kit = new KitImpl(plugin, this, name);
+        Kit kit = new Kit(plugin, this, name);
         cache.put(key, kit);
 
         dirty(key);
         return kit;
     }
 
-    @Override
     public Kit delete(String name) throws KitNotFoundException {
-        String key = key(name);
+        String key = name.toLowerCase();
         Kit removed = cache.remove(key);
 
         if (removed == null)
@@ -108,9 +96,8 @@ public class KitModule implements KitService, PluginModule {
         return removed;
     }
 
-    @Override
     public boolean exists(String name) {
-        return cache.get(key(name)) != null;
+        return cache.get(name.toLowerCase()) != null;
     }
 
     /* ---- PERSISTENCE ---- */
@@ -128,8 +115,8 @@ public class KitModule implements KitService, PluginModule {
      * Mark this kit as dirty so that it can be saved on the next batch.
      * @param kit the kit that was modified
      */
-    void dirty(String kit) {
-        dirty.add(key(kit));
+    protected void dirty(String kit) {
+        dirty.add(kit.toLowerCase());
 
         if (this.autosaver == null) {
             // Wait 10 minutes before saving.
@@ -152,7 +139,7 @@ public class KitModule implements KitService, PluginModule {
             Kit kit = cache.get(key);
 
             // Null values represent data that was removed and must be deleted from the repository.
-            data.put(key, (kit == null) ? null : ((KitImpl) kit).memento());
+            data.put(key, (kit == null) ? null : kit.memento());
         }
 
         dirty.clear();
@@ -162,7 +149,7 @@ public class KitModule implements KitService, PluginModule {
     private void loadKits() {
         try {
             for (KitData data : repository.fetchAll()) {
-                cache.put(key(data), new KitImpl(plugin, this, data));
+                cache.put(data.name().toLowerCase(), new Kit(plugin, this, data));
             }
 
             plugin.getLogger().info("Loaded " + cache.size() + " kits.");

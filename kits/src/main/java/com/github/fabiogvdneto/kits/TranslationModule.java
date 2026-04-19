@@ -16,8 +16,6 @@ public final class TranslationModule extends TranslationModuleBase {
         super(plugin);
     }
 
-    /* ---- Messages ---- */
-
     public void permissionRequired(Audience target) {
         message(target, "permission-required");
     }
@@ -80,15 +78,17 @@ public final class TranslationModule extends TranslationModuleBase {
         message(target, "kit.list.empty");
     }
 
-    public void kitList(Audience target, Collection<String> kits, int cooldownCount) {
+    public void kitList(Audience target, Collection<String> kits, int strikethrough) {
         if (kits.isEmpty()) {
             kitListEmpty(target);
             return;
         }
 
-        // Add strikethrough to kits in cooldown.
         TextComponent[] kitsComp = kits.stream().map(Component::text).toArray(TextComponent[]::new);
-        for (int i = 0; i < cooldownCount; i++) {
+
+        // Add strikethrough effect to the first kits that appear in the list.
+        // This is used to identify kits that are not redeemable by the player.
+        for (int i = 0; i < strikethrough; i++) {
             kitsComp[i] = kitsComp[i].decorate(TextDecoration.STRIKETHROUGH);
         }
 
