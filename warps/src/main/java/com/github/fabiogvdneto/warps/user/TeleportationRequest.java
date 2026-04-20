@@ -2,27 +2,68 @@ package com.github.fabiogvdneto.warps.user;
 
 import com.github.fabiogvdneto.warps.exception.TeleportationRequestClosedException;
 
+import java.time.Duration;
 import java.util.UUID;
 
-public interface TeleportationRequest {
+public class TeleportationRequest {
 
-    UUID getSender();
+    public enum State { OPEN, IGNORED, ACCEPTED, DENIED }
 
-    UUID getReceiver();
+    private final UUID sender;
+    private final UUID receiver;
+    private final Duration duration;
 
-    long getExpiryTime();
+    private long expiryTime;
+    private boolean expired;
+    private State state;
 
-    boolean hasExpired();
+    protected TeleportationRequest(UUID sender, UUID receiver, Duration duration) {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.duration = duration;
+        this.expiryTime = System.currentTimeMillis() + duration.toMillis();
+        this.state = State.OPEN;
+    }
 
-    State getState();
+    public UUID getSender() {
+        return sender;
+    }
 
-    void cancel() throws TeleportationRequestClosedException;
+    public UUID getReceiver() {
+        return receiver;
+    }
 
-    void accept() throws TeleportationRequestClosedException;
+    public long getExpiryTime() {
+        return expiryTime;
+    }
 
-    void deny() throws TeleportationRequestClosedException;
+    public boolean hasExpired() {
+        return expired || (expired = expiryTime < System.currentTimeMillis());
+    }
 
-    enum State {
-        OPEN, IGNORED, ACCEPTED, DENIED;
+    public State getState() {
+        return (state == State.OPEN && hasExpired()) ? (state = State.IGNORED) : state;
+    }
+
+    public void cancel() throws TeleportationRequestClosedException {
+        if (state != State.OPEN || hasExpired())
+            throw new TeleportationRequestClosedException(state);
+
+        state = State.IGNORED;
+    }
+
+    public void accept() throws TeleportationRequestClosedException {
+        if (state != State.OPEN || hasExpired())
+            throw new TeleportationRequestClosedException(state);
+
+        state = State.ACCEPTED;
+    }
+
+    public void deny() throws TeleportationRequestClosedException {
+        if (state != State.OPEN || hasExpired())
+            throw new TeleportationRequestClosedException(state);
+
+        state = State.DENIED;
+        expiryTime += duration.toMillis();
     }
 }

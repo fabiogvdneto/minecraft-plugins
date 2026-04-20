@@ -4,9 +4,7 @@ import com.github.fabiogvdneto.warps.command.*;
 import com.github.fabiogvdneto.warps.teleportation.TeleportationModule;
 import com.github.fabiogvdneto.warps.teleportation.TeleportationService;
 import com.github.fabiogvdneto.warps.user.UserModule;
-import com.github.fabiogvdneto.warps.user.UserService;
 import com.github.fabiogvdneto.warps.warp.WarpModule;
-import com.github.fabiogvdneto.warps.warp.WarpService;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class WarpPlugin extends JavaPlugin {
@@ -61,11 +59,11 @@ public final class WarpPlugin extends JavaPlugin {
 
     /* ---- Modules ---- */
 
-    public WarpService getWarps() {
+    public WarpModule getWarps() {
         return warps;
     }
 
-    public UserService getUsers() {
+    public UserModule getUsers() {
         return users;
     }
 

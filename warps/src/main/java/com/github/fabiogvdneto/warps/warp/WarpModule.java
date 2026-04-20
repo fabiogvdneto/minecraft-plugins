@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-public class WarpModule implements WarpService, PluginModule {
+public class WarpModule implements PluginModule {
 
     private final WarpPlugin plugin;
 
@@ -28,12 +28,10 @@ public class WarpModule implements WarpService, PluginModule {
 
     /* ---- CACHE ---- */
 
-    @Override
     public Collection<Warp> getAll() {
         return cache.values();
     }
 
-    @Override
     public Warp get(String name) throws WarpNotFoundException {
         Warp warp = cache.get(name.toLowerCase());
 
@@ -43,9 +41,8 @@ public class WarpModule implements WarpService, PluginModule {
         return warp;
     }
 
-    @Override
     public Warp create(String name, Location location) throws WarpAlreadyExistsException {
-        Warp warp = new WarpImpl(name, location);
+        Warp warp = new Warp(name, location);
 
         if (cache.putIfAbsent(name.toLowerCase(), warp) != null)
             throw new WarpAlreadyExistsException();
@@ -54,7 +51,6 @@ public class WarpModule implements WarpService, PluginModule {
         return warp;
     }
 
-    @Override
     public void delete(String name) throws WarpNotFoundException {
         if (cache.remove(name.toLowerCase()) == null)
             throw new WarpNotFoundException();
@@ -63,10 +59,10 @@ public class WarpModule implements WarpService, PluginModule {
     }
 
     private Collection<WarpData> memento() {
-        return cache.values().stream().map(warp -> ((WarpImpl) warp).memento()).toList();
+        return cache.values().stream().map(Warp::memento).toList();
     }
 
-    /* ---- PERSISTENCE ---- */
+    /* ---- REPOSITORY ---- */
 
     private void saveAsync() {
         Collection<WarpData> data = memento();
@@ -95,7 +91,7 @@ public class WarpModule implements WarpService, PluginModule {
         try {
             this.repository = new GsonWarpRepository(plugin.getDataPath().resolve("warps.json"));
             this.repository.create();
-            this.repository.fetch().forEach(data -> cache.put(data.name().toLowerCase(), new WarpImpl(data)));
+            this.repository.fetch().forEach(data -> cache.put(data.name().toLowerCase(), new Warp(data)));
             this.plugin.getLogger().info("Loaded " + cache.size() + " warps.");
         } catch (Exception e) {
             this.plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to load warp data.", e);

@@ -19,12 +19,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-public class UserModule implements UserService, PluginModule {
+public class UserModule implements PluginModule {
 
     private final WarpPlugin plugin;
     private Listener playerJoinListener;
 
     private PluginCache<UUID, User> cache;
+
     private UserRepository repository;
     private BukkitTask autosaveTask;
 
@@ -34,26 +35,23 @@ public class UserModule implements UserService, PluginModule {
 
     /* ---- CACHE ---- */
 
-    @Override
     public Collection<User> getAll() {
         return cache.getAll();
     }
 
-    @Override
     public User get(UUID userId) {
         return cache.get(userId);
     }
 
-    @Override
     public CompletableFuture<User> fetch(UUID userId) {
         return cache.load(userId, () -> {
             try {
                 UserData data = repository.fetchOne(userId);
-                return (data == null) ? new UserImpl(userId) : new UserImpl(data);
+                return (data == null) ? new User(userId) : new User(data);
             } catch (Exception e) {
                 plugin.getLogger().log(Level.SEVERE, "An error occurred while trying to load user data.", e);
                 plugin.getLogger().warning("User data seems to be corrupted. It will be overwritten.");
-                return new UserImpl(userId);
+                return new User(userId);
             }
         });
     }
@@ -63,7 +61,7 @@ public class UserModule implements UserService, PluginModule {
      * @return a snapshot of all users present in the cache
      */
     private List<UserData> memento() {
-        return cache.getAll().stream().map(user -> ((UserImpl) user).memento()).toList();
+        return cache.getAll().stream().map(User::memento).toList();
     }
 
     /**
