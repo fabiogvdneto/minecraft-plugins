@@ -35,7 +35,11 @@ public abstract class TranslationModuleBase implements PluginModule {
     private void loadTranslations(Map<String, Object> values) {
         for (Map.Entry<String, Object> entry : values.entrySet()) {
             if (entry.getValue().getClass() == String.class) {
-                translations.put(entry.getKey(), (String) entry.getValue());
+                String message = (String) entry.getValue();
+
+                if (!message.isBlank()) {
+                    translations.put(entry.getKey(), message);
+                }
             }
         }
     }
