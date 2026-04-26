@@ -13,11 +13,11 @@ public abstract class ConfigurationModuleBase implements PluginModule {
 
     @Override
     public void load() {
-        // Reload config from disk.
-        plugin.reloadConfig();
         // Save raw configuration (preserve all comments).
         // Not needed in future versions of spigot/paper (1.18+).
         plugin.saveDefaultConfig();
+        // Reload config from disk.
+        plugin.reloadConfig();
     }
 
     @Override

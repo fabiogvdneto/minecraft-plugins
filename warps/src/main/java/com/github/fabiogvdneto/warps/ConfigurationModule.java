@@ -21,7 +21,7 @@ public final class ConfigurationModule extends ConfigurationModuleBase {
     /* ---- Configuration ---- */
 
     public String getLanguage() {
-        return config().getString("lang");
+        return config().getString("language");
     }
 
     public int getTeleportationDelay(Permissible perm) {

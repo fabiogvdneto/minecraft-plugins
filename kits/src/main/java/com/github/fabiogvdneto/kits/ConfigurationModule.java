@@ -15,7 +15,7 @@ public class ConfigurationModule extends ConfigurationModuleBase {
     /* ---- Configuration ---- */
 
     public String getLanguage() {
-        return config().getString("lang");
+        return config().getString("language");
     }
 
     /* ---- Permissions ---- */
